@@ -9,8 +9,12 @@
     }
   },
   "permissions": [
-    {"fileSystem": ["write", "retainEntries", "directory"]},
-    "storage"
+    {
+      "fileSystem": ["write", "retainEntries", "directory"]
+    },
+    "identity",
+    "storage",
+    "https://oauth.vk.com/authorize"
   ],
   "icons": {
     "16": "img/icon16.png",

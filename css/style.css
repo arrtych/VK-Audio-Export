@@ -7170,6 +7170,11 @@ a.list-group-item-danger.active:focus {
   padding-top: 8px;
   padding-bottom: 7px;
   color: #fff;
+  text-decoration: none;
+}
+.login-btn:focus {
+  text-decoration: none;
+  color: #fff;
 }
 .vk-logo {
   background: url(../img/head_icons.png) no-repeat;
