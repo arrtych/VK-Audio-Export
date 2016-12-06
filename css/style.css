@@ -4688,16 +4688,26 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
 .breadcrumb > .active {
   color: #999999;
 }
+.pagination .owl-stage,
 .pagination {
   display: inline-block;
   padding-left: 0;
   margin: 20px 0;
   border-radius: 4px;
 }
+.pagination .owl-stage > .owl-item,
+.pagination > .owl-item,
+.pagination .owl-stage > li,
 .pagination > li {
   display: inline;
 }
+.pagination .owl-stage > .owl-item > a,
+.pagination > .owl-item > a,
+.pagination .owl-stage > li > a,
 .pagination > li > a,
+.pagination .owl-stage > .owl-item > span,
+.pagination > .owl-item > span,
+.pagination .owl-stage > li > span,
 .pagination > li > span {
   position: relative;
   float: left;
@@ -4709,31 +4719,73 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
   border: 1px solid #e2e2e2;
   margin-left: -1px;
 }
+.pagination .owl-stage > .owl-item:first-child > a,
+.pagination > .owl-item:first-child > a,
+.pagination .owl-stage > li:first-child > a,
 .pagination > li:first-child > a,
+.pagination .owl-stage > .owl-item:first-child > span,
+.pagination > .owl-item:first-child > span,
+.pagination .owl-stage > li:first-child > span,
 .pagination > li:first-child > span {
   margin-left: 0;
   border-bottom-left-radius: 4px;
   border-top-left-radius: 4px;
 }
+.pagination .owl-stage > .owl-item:last-child > a,
+.pagination > .owl-item:last-child > a,
+.pagination .owl-stage > li:last-child > a,
 .pagination > li:last-child > a,
+.pagination .owl-stage > .owl-item:last-child > span,
+.pagination > .owl-item:last-child > span,
+.pagination .owl-stage > li:last-child > span,
 .pagination > li:last-child > span {
   border-bottom-right-radius: 4px;
   border-top-right-radius: 4px;
 }
+.pagination .owl-stage .owl-item > a:hover,
+.pagination .owl-item > a:hover,
+.pagination .owl-stage .owl-item > span:hover,
+.pagination .owl-item > span:hover,
+.pagination .owl-stage > li > a:hover,
 .pagination > li > a:hover,
+.pagination .owl-stage > li > span:hover,
 .pagination > li > span:hover,
+.pagination .owl-stage .owl-item > a:focus,
+.pagination .owl-item > a:focus,
+.pagination .owl-stage .owl-item > span:focus,
+.pagination .owl-item > span:focus,
+.pagination .owl-stage > li > a:focus,
 .pagination > li > a:focus,
+.pagination .owl-stage > li > span:focus,
 .pagination > li > span:focus {
   z-index: 2;
   color: #555555;
   background-color: #eeeeee;
   border-color: #e2e2e2;
 }
+.pagination .owl-stage > .active-page > a,
+.pagination > .active-page > a,
+.pagination .owl-stage > .active-page > span,
+.pagination > .active-page > span,
+.pagination .owl-stage > .active > a,
 .pagination > .active > a,
+.pagination .owl-stage > .active > span,
 .pagination > .active > span,
+.pagination .owl-stage > .active-page > a:hover,
+.pagination > .active-page > a:hover,
+.pagination .owl-stage > .active-page > span:hover,
+.pagination > .active-page > span:hover,
+.pagination .owl-stage > .active > a:hover,
 .pagination > .active > a:hover,
+.pagination .owl-stage > .active > span:hover,
 .pagination > .active > span:hover,
+.pagination .owl-stage > .active-page > a:focus,
+.pagination > .active-page > a:focus,
+.pagination .owl-stage > .active-page > span:focus,
+.pagination > .active-page > span:focus,
+.pagination .owl-stage > .active > a:focus,
 .pagination > .active > a:focus,
+.pagination .owl-stage > .active > span:focus,
 .pagination > .active > span:focus {
   z-index: 3;
   color: #fff;
@@ -4741,11 +4793,17 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
   border-color: #127ba3;
   cursor: default;
 }
+.pagination .owl-stage > .disabled > span,
 .pagination > .disabled > span,
+.pagination .owl-stage > .disabled > span:hover,
 .pagination > .disabled > span:hover,
+.pagination .owl-stage > .disabled > span:focus,
 .pagination > .disabled > span:focus,
+.pagination .owl-stage > .disabled > a,
 .pagination > .disabled > a,
+.pagination .owl-stage > .disabled > a:hover,
 .pagination > .disabled > a:hover,
+.pagination .owl-stage > .disabled > a:focus,
 .pagination > .disabled > a:focus {
   color: #999999;
   background-color: #eeeeee;
@@ -7194,6 +7252,16 @@ a.list-group-item-danger.active:focus {
   float: right;
   font-size: 19px;
 }
+.audios-loss {
+  padding-left: 7px;
+  font-size: 11px;
+  color: #b77c10;
+  position: relative;
+  top: -2px;
+}
+.audios-loss.show {
+  display: inline-block !important;
+}
 .audios {
   overflow-y: scroll;
   min-height: 547px;
@@ -7264,6 +7332,65 @@ a.list-group-item-danger.active:focus {
   margin-top: 8px!important;
   margin-right: 32px;
 }
+.download-manager a {
+  padding-top: 14px!important;
+  font-size: 13px;
+}
+.player-container {
+  display: flex;
+  background: #ffffff;
+  padding: 10px 20px;
+  border: 1px solid #cecece;
+}
+.player-container .left i {
+  font-size: 5em;
+  color: #158cba;
+  cursor: pointer;
+  position: relative;
+}
+.player-container .left i:hover {
+  color: #176584;
+}
+.player-container .left i:active {
+  top: 1px;
+}
+.player-container .right {
+  padding-left: 16px;
+  position: relative;
+  width: 100%;
+  top: 4px;
+}
+.player-container .right .progress-container {
+  position: relative;
+}
+.player-container .right .progress-container .current-time {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  font-size: 11px;
+}
+.player-container .right .progress-container .progress {
+  height: 6px;
+  margin: 7px 0;
+  cursor: pointer;
+}
+.player-container .right .progress-container .audio-duration {
+  position: absolute;
+  top: 7px;
+  right: 0;
+  font-size: 11px;
+}
+.player-container .right h3 {
+  font-size: 1.2em;
+  margin-bottom: 0;
+  font-weight: 600;
+  margin-top: 0;
+}
+.player-container .right h5 {
+  font-size: 1.2em;
+  margin-top: 6px;
+  margin-bottom: 0;
+}
 .audios-container .audios .audio {
   border: 1px solid #e7e7e7;
   float: left;
@@ -7276,7 +7403,7 @@ a.list-group-item-danger.active:focus {
 }
 .audios-container .audios .audio .left {
   float: left;
-  width: 80px;
+  width: 70px;
 }
 .audios-container .audios .audio .left a {
   text-align: center;
@@ -7313,6 +7440,9 @@ a.list-group-item-danger.active:focus {
   font-size: 20px;
   padding: 10px 20px;
 }
+.audios-container .audios .audio .right .download:hover i {
+  font-size: 22px;
+}
 .audios-container .audios .audio .right .duration {
   font-size: 15px;
   float: right;
@@ -7344,6 +7474,11 @@ a.list-group-item-danger.active:focus {
 .navbar .user .user-avatar {
   height: 40px;
 }
+.navbar .user .user-name {
+  font-weight: 700;
+  font-size: 15px;
+  padding-right: 7px;
+}
 .loading {
   display: none;
 }
@@ -7352,7 +7487,7 @@ a.list-group-item-danger.active:focus {
   bottom: 0;
   left: 0;
   right: 0;
-  margin: 15px 0;
+  margin: 0;
 }
 .container-bottom .pagination {
   float: left;

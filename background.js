@@ -121,13 +121,28 @@ function launchMain(launchData, vkData) {
     chrome.app.window.create('index.html', {
         id: "mainWindow",
         innerBounds: {
-            minWidth: 780,
-            minHeight: 640
+            minWidth: 800,
+            minHeight: 720
         },
         resizable: true
     }, function (win) {
         win.contentWindow.launchData = launchData;
         win.contentWindow.vkData = vkData;
+    });
+}
+function launchDownloadManager(launchData, vkData, downloads) {
+    chrome.app.window.create('downloads.html', {
+        id: "downloadsWindow",
+        innerBounds: {
+            minWidth: 480,
+            minHeight: 640
+        },
+        showInShelf: true,
+        resizable: true
+    }, function (win) {
+        win.contentWindow.launchData = launchData;
+        win.contentWindow.vkData = vkData;
+        if(downloads) win.contentWindow.downloads = downloads;
     });
 }
 chrome.app.runtime.onLaunched.addListener(function(launchData) {
@@ -196,6 +211,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                 answer.num = count;
                 sendResponse(answer);
             });
+            return true;
+        } else if(action == 'openDownloadManager') {
+            sendResponse({});
+            launchDownloadManager(false, false, {});
             return true;
         }
 

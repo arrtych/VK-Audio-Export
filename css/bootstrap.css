@@ -4687,16 +4687,26 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
 .breadcrumb > .active {
   color: #999999;
 }
+.pagination .owl-stage,
 .pagination {
   display: inline-block;
   padding-left: 0;
   margin: 20px 0;
   border-radius: 4px;
 }
+.pagination .owl-stage > .owl-item,
+.pagination > .owl-item,
+.pagination .owl-stage > li,
 .pagination > li {
   display: inline;
 }
+.pagination .owl-stage > .owl-item > a,
+.pagination > .owl-item > a,
+.pagination .owl-stage > li > a,
 .pagination > li > a,
+.pagination .owl-stage > .owl-item > span,
+.pagination > .owl-item > span,
+.pagination .owl-stage > li > span,
 .pagination > li > span {
   position: relative;
   float: left;
@@ -4708,31 +4718,73 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
   border: 1px solid #e2e2e2;
   margin-left: -1px;
 }
+.pagination .owl-stage > .owl-item:first-child > a,
+.pagination > .owl-item:first-child > a,
+.pagination .owl-stage > li:first-child > a,
 .pagination > li:first-child > a,
+.pagination .owl-stage > .owl-item:first-child > span,
+.pagination > .owl-item:first-child > span,
+.pagination .owl-stage > li:first-child > span,
 .pagination > li:first-child > span {
   margin-left: 0;
   border-bottom-left-radius: 4px;
   border-top-left-radius: 4px;
 }
+.pagination .owl-stage > .owl-item:last-child > a,
+.pagination > .owl-item:last-child > a,
+.pagination .owl-stage > li:last-child > a,
 .pagination > li:last-child > a,
+.pagination .owl-stage > .owl-item:last-child > span,
+.pagination > .owl-item:last-child > span,
+.pagination .owl-stage > li:last-child > span,
 .pagination > li:last-child > span {
   border-bottom-right-radius: 4px;
   border-top-right-radius: 4px;
 }
+.pagination .owl-stage .owl-item > a:hover,
+.pagination .owl-item > a:hover,
+.pagination .owl-stage .owl-item > span:hover,
+.pagination .owl-item > span:hover,
+.pagination .owl-stage > li > a:hover,
 .pagination > li > a:hover,
+.pagination .owl-stage > li > span:hover,
 .pagination > li > span:hover,
+.pagination .owl-stage .owl-item > a:focus,
+.pagination .owl-item > a:focus,
+.pagination .owl-stage .owl-item > span:focus,
+.pagination .owl-item > span:focus,
+.pagination .owl-stage > li > a:focus,
 .pagination > li > a:focus,
+.pagination .owl-stage > li > span:focus,
 .pagination > li > span:focus {
   z-index: 2;
   color: #555555;
   background-color: #eeeeee;
   border-color: #e2e2e2;
 }
+.pagination .owl-stage > .active-page > a,
+.pagination > .active-page > a,
+.pagination .owl-stage > .active-page > span,
+.pagination > .active-page > span,
+.pagination .owl-stage > .active > a,
 .pagination > .active > a,
+.pagination .owl-stage > .active > span,
 .pagination > .active > span,
+.pagination .owl-stage > .active-page > a:hover,
+.pagination > .active-page > a:hover,
+.pagination .owl-stage > .active-page > span:hover,
+.pagination > .active-page > span:hover,
+.pagination .owl-stage > .active > a:hover,
 .pagination > .active > a:hover,
+.pagination .owl-stage > .active > span:hover,
 .pagination > .active > span:hover,
+.pagination .owl-stage > .active-page > a:focus,
+.pagination > .active-page > a:focus,
+.pagination .owl-stage > .active-page > span:focus,
+.pagination > .active-page > span:focus,
+.pagination .owl-stage > .active > a:focus,
 .pagination > .active > a:focus,
+.pagination .owl-stage > .active > span:focus,
 .pagination > .active > span:focus {
   z-index: 3;
   color: #fff;
@@ -4740,11 +4792,17 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
   border-color: #127ba3;
   cursor: default;
 }
+.pagination .owl-stage > .disabled > span,
 .pagination > .disabled > span,
+.pagination .owl-stage > .disabled > span:hover,
 .pagination > .disabled > span:hover,
+.pagination .owl-stage > .disabled > span:focus,
 .pagination > .disabled > span:focus,
+.pagination .owl-stage > .disabled > a,
 .pagination > .disabled > a,
+.pagination .owl-stage > .disabled > a:hover,
 .pagination > .disabled > a:hover,
+.pagination .owl-stage > .disabled > a:focus,
 .pagination > .disabled > a:focus {
   color: #999999;
   background-color: #eeeeee;

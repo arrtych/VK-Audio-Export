@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>VK Audio Import</title>
     <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/owl.carousel.min.css">
+    <link rel="stylesheet" href="css/owl.theme.green.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -24,6 +26,9 @@
 
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown download-manager">
+                    <a href="#"><i class="fa fa-tasks" aria-hidden="true"></i> Загрузки (<span class="downloads-count">?</span>)</a>
+                </li>
                 <li class="dropdown user">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span class="user-name">User</span> <img src="img/avatar48.png" alt="User avatar" class="img-circle user-avatar"> <span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
@@ -39,7 +44,7 @@
         <div class="col-md-8 col-sm-8 audios-container">
             <div class="header row">
                 <div class="col-sm-6">
-                    <h4>Мои аудиозаписи (<span class="audios-num">?</span>)</h4>
+                    <h4>Мои аудиозаписи (<span class="audios-num">?</span>)<span class="audios-loss hide">?</span><span class="loading"><i class="fa fa-circle-o-notch fa-spin fa-fw"></i><span class="sr-only">Loading...</span></span></h4>
                 </div>
                 <div class="col-sm-6">
                     <div class="checkbox checkbox-all">
@@ -47,10 +52,11 @@
                         <label for="select-all"></label>
                     </div>
                     <div class="tracks-num">
+                        <a class="label label-default pull-right" data-num="1000">1000</a>
+                        <a class="label label-default pull-right" data-num="500">500</a>
                         <a class="label label-default pull-right" data-num="100">100</a>
                         <a class="label label-default pull-right" data-num="50">50</a>
                         <a class="label label-primary pull-right" data-num="20">20</a>
-                        <a class="label content-spinner pull-right"><i class="fa fa-refresh fa-spin" style="display: none;"></i></a>
                     </div>
                 </div>
             </div>
@@ -69,7 +75,7 @@
 <div class="container-fluid container-bottom row">
     <div class="row">
         <div class="col-md-8 col-sm-8 pagination-container">
-            <ul class="pagination pagination-lg">
+            <div class="pagination pagination-lg owl-carousel">
                 <li class="disabled"><a href="#">&laquo;</a></li>
                 <li class="active"><a href="#">1</a></li>
                 <li><a href="#">2</a></li>
@@ -80,14 +86,30 @@
                 <li><a href="#">7</a></li>
                 <li><a href="#">8</a></li>
                 <li><a href="#">&raquo;</a></li>
-            </ul>
+            </div>
         </div>
         <div class="col-md-4 col-sm-4 player-container">
+            <div class="left">
+                <i class="fa fa-play-circle-o" aria-hidden="true"></i>
+            </div>
+            <div class="right">
+                <h3>Lost Kings</h3>
+                <h5>Pjone desdsd</h5>
+                <div class="progress-container">
+                    <span class="current-time">2:06</span>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: 60%;"></div>
+                    </div>
+                    <span class="audio-duration">3:26</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 <script src="js/jquery.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
+<script src="js/jquery.mousewheel.min.js"></script>
+<script src="js/owl.carousel.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

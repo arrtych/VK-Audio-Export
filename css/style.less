@@ -62,6 +62,16 @@
     }
   }
 }
+.audios-loss {
+  padding-left: 7px;
+  font-size: 11px;
+  color: #b77c10;
+  position: relative;
+  top: -2px;
+  &.show {
+    display: inline-block !important;
+  }
+}
 .audios {
   overflow-y: scroll;
   min-height: 547px;
@@ -129,6 +139,69 @@
   margin-top: 8px!important;
   margin-right: 32px;
 }
+.download-manager {
+  a {
+    padding-top: 14px!important;
+    font-size: 13px;
+  }
+}
+.player-container {
+  display: flex;
+  background: #ffffff;
+  padding: 10px 20px;
+  border: 1px solid #cecece;
+  .left {
+    i {
+      font-size: 5em;
+      color: #158cba;
+      cursor: pointer;
+      position: relative;
+      &:hover {
+        color: #176584;
+      }
+      &:active {
+        top: 1px;
+      }
+    }
+  }
+  .right {
+    padding-left: 16px;
+    position: relative;
+    width: 100%;
+    top: 4px;
+    .progress-container {
+      position: relative;
+      .current-time {
+        position: absolute;
+        top: 7px;
+        left: 0;
+        font-size: 11px;
+      }
+      .progress {
+        height: 6px;
+        margin: 7px 0;
+        cursor: pointer;
+      }
+      .audio-duration {
+        position: absolute;
+        top: 7px;
+        right: 0;
+        font-size: 11px;
+      }
+    }
+    h3 {
+      font-size: 1.2em;
+      margin-bottom: 0;
+      font-weight: 600;
+      margin-top: 0;
+    }
+    h5 {
+      font-size: 1.2em;
+      margin-top: 6px;
+      margin-bottom: 0;
+    }
+  }
+}
 .audios-container {
   .audios {
     .audio {
@@ -142,7 +215,7 @@
       }
       .left {
         float: left;
-        width: 80px;
+        width: 70px;
         a {
           text-align: center;
           display: block;
@@ -179,6 +252,11 @@
           float: right;
           font-size: 20px;
           padding: 10px 20px;
+          &:hover {
+            i {
+              font-size: 22px;
+            }
+          }
         }
         .duration {
           font-size: 15px;
@@ -215,6 +293,11 @@
     .user-avatar {
       height: 40px;
     }
+    .user-name {
+      font-weight: 700;
+      font-size: 15px;
+      padding-right: 7px;
+    }
   }
 }
 .loading {
@@ -225,7 +308,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  margin: 15px 0;
+  margin: 0;
   .pagination {
     float: left;
     margin: 0;

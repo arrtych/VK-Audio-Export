@@ -1,3 +1,5 @@
+var lastContentSendMessage = null;
+
 String.prototype.toHHMMSS = function () {
     var sec_num = parseInt(this, 10); // don't forget the second param
     var hours   = Math.floor(sec_num / 3600);
@@ -21,12 +23,97 @@ function sendMessage(action, callback, data) {
                 msg[property] = data[property];
             }
         }
+        if(action == 'getAudios') lastContentSendMessage = msg;
         chrome.runtime.sendMessage(msg, function(response){
             if(callback) callback(response);
             console.log('action', action, 'response', response);
             if(chrome.runtime.lastError) console.error('action', action, chrome.runtime.lastError);
         });
     }
+}
+function getAudios(params, callback) {
+    sendMessage('getAudios', function(response){
+        if(response.items) {
+            $('.audios').empty();
+            if(response.num) {
+                $('.audios-num').text(response.num);
+            }
+            for(var i = 0; i < response.items.length; i++) {
+                var e = response.items[i],
+                    id = e.owner_id + "_" + e.id;
+                var $audio = $('<div class="audio" data-owner-id="' + e.owner_id + '" data-audio-id="' + e.id + '"><div class="left">' +
+                    '<a href="#"><i class="fa fa-play-circle fa-2x" aria-hidden="true"></i></a></div>' +
+                    '<div class="middle"><h5><span>' + e.artist + '</span> - <span title="' + e.title + '">' + e.title + '</span></h5>' +
+                    '</div><div class="right"><div class="checkbox">' +
+                    '<input type="checkbox" value="None" id="checkbox-' + id + '" name="check" />' +
+                    '<label for="checkbox-' + id + '"></label></div>' +
+                    '<a href="' + e.url + '" class="download" title="Download Audio"><i class="fa fa-download" aria-hidden="true"></i></a>' +
+                    '<span class="duration" data-duration="' + e.duration + '">' + (e.duration + "").toHHMMSS() + '</span>' +
+                    '</div>' +
+                    '</div>');
+                $('.audios').append($audio);
+            }
+            var pages = response.count / response.num;
+            if(i < response.num) {
+                var percent = (100 - (i / response.num * 100));
+                $('.audios-loss').html("-" + percent + "%").removeClass('hide').addClass('show').attr('title', percent + '% удалённых треков');
+            } else {
+                $('.audios-loss').removeClass('show').addClass('hide');
+            }
+            var paginationPrefix = '#my-page-';
+            var $pag_wrapper = $('.pagination-container');
+            if(pages !== $pag_wrapper.find('.owl-stage > div').length){
+                $pag_wrapper.empty();
+                $pag_wrapper.append('<div class="pagination"></div>');
+                for(var i = 0; i < response.count / (response.num) - 200; i++) {
+                    $pag_wrapper.find('.pagination').append('<a href="' + paginationPrefix + (i + 1) + '"' + (i == response.page ? ' class="selected"' : '') + ' data-hash="' + paginationPrefix + (i + 1) + '">' + (i + 1) + '</a>');
+                }
+                var owl = $pag_wrapper.find('.pagination');
+                owl.owlCarousel({
+                    loop: false,
+                    dots: false,
+                    center: true,
+                    URLhashListener: true,
+                    slideBy: 3,
+                    margin: 5,
+                    startPosition: response.page,
+                    loadedClass: 'owl-carousel owl-loaded',
+                    responsive:{
+                        0:{
+                            items:10
+                        },
+                        600:{
+                            items:14
+                        },
+                        768:{
+                            items:16
+                        },
+                        1368:{
+                            items:25
+                        },
+                    }
+                });
+                owl.on('mousewheel', '.owl-stage', function (e) {
+                    if (e.deltaY > 0) {
+                        owl.trigger('next.owl');
+                    } else {
+                        owl.trigger('prev.owl');
+                    }
+                    e.preventDefault();
+                });
+
+                // $('.controls .fa-chevron-circle-right').on('click', function(){
+                //     owl.trigger('next.owl');
+                // });
+                // $('.controls .fa-chevron-circle-left').on('click', function(){
+                //     owl.trigger('prev.owl');
+                // });
+                //$pag_wrapper.children().fadeOut(100);
+            }
+            $(window).trigger('resize');
+            if(callback) callback(response);
+        }
+    }, params || {});
 }
 function getImageBlob(url, callback) {
     var xhr = new XMLHttpRequest();
@@ -52,6 +139,12 @@ $(document).ready(function(){
         });
         e.preventDefault();
     });
+    $('.download-manager a').on('click', function(e){
+        sendMessage('openDownloadManager', function(response){
+            
+        });
+        e.preventDefault();
+    });
     $('.login-btn').on('click', function(e){
         var $that = $(this);
         $that.find('.loading').removeClass('hide').addClass('show');
@@ -65,6 +158,17 @@ $(document).ready(function(){
 
             }
         });
+        e.preventDefault();
+    });
+    $('.tracks-num > a').on('click', function(e){
+        var $that = $(this),
+            count = $that.data('num');
+        $that.siblings().removeClass('label-primary').addClass('label-default');
+        $that.removeClass('label-default').addClass('label-primary');
+        if(count && count > 0) {
+            lastContentSendMessage.count = count;
+            getAudios(lastContentSendMessage);
+        }
         e.preventDefault();
     });
     $('#select-all').on('change', function(e){
@@ -97,27 +201,6 @@ $(document).ready(function(){
                 $(window).trigger('resize');
             }
         });
-        sendMessage('getAudios', function(response){
-            if(response.num) {
-                $('.audios-num').text(response.num);
-            }
-            if(response.items) {
-                $.each(response.items, function(i, e){
-                    var id = e.owner_id + "_" + e.id;
-                    var $audio = $('<div class="audio" data-owner-id="' + e.owner_id + '" data-audio-id="' + e.id + '"><div class="left">' +
-                        '<a href="#"><i class="fa fa-play-circle fa-2x" aria-hidden="true"></i></a></div>' +
-                        '<div class="middle"><h5><span>' + e.artist + '</span> - <span title="' + e.title + '">' + e.title + '</span></h5>' +
-                        '</div><div class="right"><div class="checkbox">' +
-                        '<input type="checkbox" value="None" id="checkbox-' + id + '" name="check" />' +
-                        '<label for="checkbox-' + id + '"></label></div>' +
-                        '<a href="' + e.url + '" class="download" title="Download Audio"><i class="fa fa-download" aria-hidden="true"></i></a>' +
-                        '<span class="duration" data-duration="' + e.duration + '">' + (e.duration + "").toHHMMSS() + '</span>' +
-                        '</div>' +
-                    '</div>');
-                    $('.audios').append($audio);
-                });
-                $(window).trigger('resize');
-            }
-        });
+        getAudios();
     }
 });
