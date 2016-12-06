@@ -18,21 +18,12 @@
         $('#main_content').headsmart()
       })
     </script>
-    <script type="text/javascript" src="javascripts/vk_api.js"></script>
     <title>vk-audio-export by 4matic</title>
   </head>
 
   <body>
-    <div id="vk_api_transport"></div>
-    <script type="text/javascript">
-      setTimeout(function() {
-        var el = document.createElement("script");
-        el.type = "text/javascript";
-        el.src = "//vk.com/js/api/openapi.js?122";
-        el.async = true;
-        document.getElementById("vk_api_transport").appendChild(el);
-      }, 0);
-    </script>
+    <script src="//vk.com/js/api/openapi.js" type="text/javascript"></script>
+    <script type="text/javascript" src="javascripts/vk_api.js"></script>
     <a id="forkme_banner" href="https://github.com/4matic/VK-Audio-Export">View on GitHub</a>
     <div class="shell">
 
@@ -63,6 +54,7 @@
           Добро пожаловать.
         </h3>
         <div id="vk_like"></div>
+        <div id="vk_auth"></div>
         <a href="#" class="login-btn"><span class="vk-logo"></span>Войти</a>
         <p>Для начала Вам надо зайти в свой аккаунт Вконтакте, а затем разрешить доступ приложению к своим аудиозаписям</p>
 
