@@ -18,18 +18,21 @@
         $('#main_content').headsmart()
       })
     </script>
-    <!-- Put this script tag to the <head> of your page -->
-    <script type="text/javascript" src="//vk.com/js/api/openapi.js?136"></script>
-
-    <script type="text/javascript">
-      VK.init({apiId: 5763233, onlyWidgets: true});
-    </script>
-
-    <!--<script type="text/javascript" src="javascripts/vk_api.js"></script>-->
+    <script type="text/javascript" src="javascripts/vk_api.js"></script>
     <title>vk-audio-export by 4matic</title>
   </head>
 
   <body>
+    <div id="vk_api_transport"></div>
+    <script type="text/javascript">
+      setTimeout(function() {
+        var el = document.createElement("script");
+        el.type = "text/javascript";
+        el.src = "//vk.com/js/api/openapi.js";
+        el.async = true;
+        document.getElementById("vk_api_transport").appendChild(el);
+      }, 0);
+    </script>
     <a id="forkme_banner" href="https://github.com/4matic/VK-Audio-Export">View on GitHub</a>
     <div class="shell">
 
@@ -59,11 +62,7 @@
           <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>
           Добро пожаловать.
         </h3>
-        <!-- Put this div tag to the place, where the Comments block will be -->
-        <div id="vk_comments"></div>
-        <script type="text/javascript">
-          VK.Widgets.Comments("vk_comments", {limit: 10, width: "665", attach: "*"});
-        </script>
+        <div id="vk_like"></div>
         <a href="#" class="login-btn"><span class="vk-logo"></span>Войти</a>
         <p>Для начала Вам надо зайти в свой аккаунт Вконтакте, а затем разрешить доступ приложению к своим аудиозаписям</p>
 
