@@ -5,14 +5,14 @@ window.vkAsyncInit = function() {
     VK.init({
         apiId: 5763233
     });
-    VK.Widgets.Like("vk_like", {type: "button"});
-    VK.Observer.subscribe("widgets.like.liked", function(){
-        alert("Thank you for your like.");
-    });
-    VK.Observer.subscribe("auth.login", function(e){
-        alert("auth.login");
-        console.log(e);
-    });
+    // VK.Widgets.Like("vk_like", {type: "button"});
+    // VK.Observer.subscribe("widgets.like.liked", function(){
+    //     alert("Thank you for your like.");
+    // });
+    // VK.Observer.subscribe("auth.login", function(e){
+    //     alert("auth.login");
+    //     console.log(e);
+    // });
 };
 function initLogin() {
     VK.Auth.login(function (response) {
@@ -25,10 +25,10 @@ function initLogin() {
             /* User clicked Cancel button in the authorization window */
         }
         console.log('response', response);
-        VK.Auth.getLoginStatus(function(data){
-            console.log('data', data);
-        });
-    }, 1);
+        // VK.Auth.getLoginStatus(function(data){
+        //     console.log('data', data);
+        // });
+    }, 8);
 }
 $(document).ready(function(){
     $('.login-btn').on('click', function(){
