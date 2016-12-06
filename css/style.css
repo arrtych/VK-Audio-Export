@@ -7141,40 +7141,33 @@ a.list-group-item-danger.active:focus {
 .login-btn {
   float: right;
   background-color: #6888ad;
-  font-size: 14px;
-  line-height: 20px;
-  border-radius: 3px;
-  padding: 7px 16px 8px;
-  margin: 0;
-  display: inline-block;
-  zoom: 1;
-  cursor: pointer;
-  white-space: nowrap;
-  outline: none;
-  font-family: -apple-system, BlinkMacSystemFont, Roboto, Open Sans, Helvetica Neue, sans-serif;
-  vertical-align: top;
-  text-align: center;
-  text-decoration: none;
-  background: none;
-  background-color: #5e81a8;
-  color: #fff;
-  border: 0;
+  border-color: #50647b;
+  padding-left: 20px;
+  padding-right: 20px;
+  position: relative;
 }
 .login-btn:hover {
   background-color: #6888ad;
   text-decoration: none;
-  color: #fff;
+  border-color: #50647b!important;
 }
+.login-btn:focus,
 .login-btn:active {
-  background-color: #5779a1;
-  padding-top: 8px;
-  padding-bottom: 7px;
-  color: #fff;
+  background-color: #5779a1!important;
   text-decoration: none;
+  border-color: #586575!important;
 }
-.login-btn:focus {
-  text-decoration: none;
-  color: #fff;
+.login-btn > span:not(.vk-logo) {
+  vertical-align: middle;
+  line-height: 19px;
+}
+.login-btn .loading {
+  position: absolute;
+  left: 20px;
+  top: 8px;
+}
+.login-btn .loading i {
+  font-size: 25px;
 }
 .vk-logo {
   background: url(../img/head_icons.png) no-repeat;
@@ -7185,6 +7178,25 @@ a.list-group-item-danger.active:focus {
   float: left;
   margin: 0;
   margin-right: 14px;
+}
+.navbar-brand {
+  padding: 1px 0 0 10px;
+}
+.navbar-brand img {
+  float: left;
+  height: 40px;
+  margin-top: 4px;
+}
+.navbar-brand h3 {
+  font-weight: 700;
+  text-transform: uppercase;
+  float: left;
+  margin-top: 12px;
+  margin-left: 11px;
+  color: #555555;
+}
+.loading {
+  display: none;
 }
 .container-fluid.container-welcome {
   padding: 0;
@@ -7214,7 +7226,13 @@ a.list-group-item-danger.active:focus {
   margin: 0;
   line-height: 115px;
 }
+.container-fluid.container-welcome .footer .loading {
+  float: right;
+  padding-right: 10px;
+  padding-top: 4px;
+}
 .container-fluid .created-by {
   font-style: italic;
-  font-size: 9px;
+  font-size: 17px;
+  line-height: 51px;
 }

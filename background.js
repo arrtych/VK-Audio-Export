@@ -16,7 +16,7 @@ function setSettings(data, callback) {
             if (callback) callback(storage);
         });
     } else {
-        if (callback) callback(null, true);
+        if (callback) callback(null, new Error('Empty input data'));
     }
 }
 
@@ -27,16 +27,19 @@ function getSettings(callback) {
             storage = data.vk_user_data;
             if(callback) callback(storage);
         } else {
-            callback(null, true);
+            callback(null, new Error('Empty vk_user_data'));
         }
     });
 }
 
-function handleProviderResponse(values) {
+function handleProviderResponse(values, callback) {
     if (values.hasOwnProperty('access_token')) {
         // console.log('setAccessToken', values);
-        setSettings(values, function(){
+        setSettings(values, function(data, error){
             //settings setting done
+            if(callback) {
+                callback(data, error);
+            }
         });
     } else if (values.hasOwnProperty('code')) { //if code is used
         //exchangeCodeForToken(values.code);
@@ -59,36 +62,53 @@ function authorize(callback) {
     }, function(redirect_url) {
         // console.log(redirect_url);
         if(chrome.runtime.lastError) {
-            if(callback) callback(new Error(chrome.runtime.lastError));
-            return;
+            if(callback) callback(null, new Error(chrome.runtime.lastError));
         } else {
             var matches = redirect_url.match(redirectRe);
             // console.log('redirect_url', redirect_url, matches);
             if (matches && matches.length > 1) {
-                handleProviderResponse(parseRedirectFragment(matches[1]));
+                if(callback) {
+                    handleProviderResponse(parseRedirectFragment(matches[1]), function(data, error){
+                        callback(data, error);
+                    });
+                }
             } else {
-                if(callback) callback(new Error('Invalid redirect URI'));
+                if(callback) callback(null, new Error('Invalid redirect URI'));
             }
         }
+        return;
     });
 }
 
 chrome.app.runtime.onLaunched.addListener(function(launchData) {
     getSettings(function(vkData, error) {
-        chrome.app.window.create('index.html', {
-            id: "welcomeWindow",
-            innerBounds: {
-                minWidth: 670,
-                minHeight: 460,
-                maxWidth: 800,
-                maxHeight: 480
-            }
-            // resizable: false
-        }, function (win) {
-            console.log(chrome.runtime.getURL("img/login.png"));
-            win.contentWindow.launchData = launchData;
-            win.contentWindow.vkData = vkData;
-        });
+        if(error) {//not logged in
+            chrome.app.window.create('welcome.html', {
+                id: "welcomeWindow",
+                innerBounds: {
+                    minWidth: 670,
+                    minHeight: 500,
+                    maxWidth: 800,
+                    maxHeight: 520
+                }
+                // resizable: false
+            }, function (win) {
+                win.contentWindow.launchData = launchData;
+            });
+        } else {
+            chrome.app.window.create('index.html', {
+                id: "mainWindow",
+                innerBounds: {
+                    minWidth: 760,
+                    minHeight: 500
+                },
+                resizable: true
+            }, function (win) {
+                console.log(vkData, error);
+                win.contentWindow.launchData = launchData;
+                win.contentWindow.vkData = vkData;
+            });
+        }
     });
 });
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
@@ -97,7 +117,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if(action) {
         console.log('message', message, 'sender', sender, 'sendResponse', sendResponse);
         if(action == 'authorize') {
-            authorize();
+            authorize(function(vkData, error){
+                if(error) sendResponse({error: error});
+                else sendResponse(vkData);
+            });
             return true;
         }
     }

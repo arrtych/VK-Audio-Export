@@ -19,11 +19,17 @@ $(document).ready(function(){
     console.log('launchData', launchData);
     console.log('vkData', vkData);
     $('.login-btn').on('click', function(){
+        var $that = $(this);
+        $that.find('.loading').removeClass('hide').addClass('show');
+        $that.find('.vk-logo').css('opacity', 0);
         sendMessage('authorize', function(response){
+            if(!response.error) {//logged in
+                $that.find('.loading').removeClass('show').addClass('hide');
+                $that.find('.vk-logo').css('opacity', 1);
+                //open next window
+            } else {
 
+            }
         });
     });
-    if(Object.keys(vkData).length > 0) {
-
-    }
 });
