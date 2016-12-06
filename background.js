@@ -99,8 +99,8 @@ chrome.app.runtime.onLaunched.addListener(function(launchData) {
             chrome.app.window.create('index.html', {
                 id: "mainWindow",
                 innerBounds: {
-                    minWidth: 760,
-                    minHeight: 500
+                    minWidth: 780,
+                    minHeight: 640
                 },
                 resizable: true
             }, function (win) {

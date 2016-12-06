@@ -7179,15 +7179,131 @@ a.list-group-item-danger.active:focus {
   margin: 0;
   margin-right: 14px;
 }
-.navbar-brand {
+.albums-container h4,
+.audios-container h4 {
+  margin-top: 10px;
+}
+.tracks-num {
+  float: right;
+  margin-top: 11px;
+  margin-right: 10px;
+}
+.tracks-num .label {
+  margin-right: 5px;
+}
+.audio .checkbox,
+.checkbox-all {
+  width: 20px;
+  position: relative;
+  margin: 20px auto;
+  float: right;
+  margin-top: 12px;
+  margin-right: 14px;
+}
+.audio .checkbox label,
+.checkbox-all label {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #fcfff4;
+  background: linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+  border-radius: 4px;
+  box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0, 0, 0, 0.5);
+}
+.audio .checkbox label:after,
+.checkbox-all label:after {
+  content: '';
+  width: 9px;
+  height: 5px;
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  border: 3px solid #333;
+  border-top: none;
+  border-right: none;
+  background: transparent;
+  opacity: 0;
+  transform: rotate(-45deg);
+}
+.audio .checkbox label:hover::after,
+.checkbox-all label:hover::after {
+  opacity: 0.5;
+}
+.audio .checkbox input[type=checkbox],
+.checkbox-all input[type=checkbox] {
+  visibility: hidden;
+}
+.audio .checkbox input[type=checkbox]:checked + label:after,
+.checkbox-all input[type=checkbox]:checked + label:after {
+  opacity: 1;
+}
+.checkbox-all {
+  float: right;
+  margin-top: 8px!important;
+  margin-right: 15px;
+}
+.audios-container .audios .audio {
+  border: 1px solid #e7e7e7;
+  float: left;
+  width: 100%;
+  display: inline-block;
+}
+.audios-container .audios .audio:hover {
+  background: #f8f8f8;
+}
+.audios-container .audios .audio .left {
+  float: left;
+  width: 13%;
+}
+.audios-container .audios .audio .left a {
+  text-align: center;
+  display: block;
+}
+.audios-container .audios .audio .left a i {
+  font-size: 40px;
+  padding: 5px;
+}
+.audios-container .audios .audio .middle {
+  float: left;
+  width: 58%;
+}
+.audios-container .audios .audio .middle h5 {
+  font-size: 17px;
+  margin: 16px 0;
+}
+.audios-container .audios .audio .middle h5 > span:first-of-type {
+  font-weight: 600;
+}
+.audios-container .audios .audio .right {
+  float: left;
+  width: 29%;
+}
+.audios-container .audios .audio .right .download {
+  float: right;
+  font-size: 20px;
+  padding: 10px 20px;
+}
+.audios-container .audios .audio .right .duration {
+  font-size: 18px;
+  float: right;
+  display: block;
+  margin-top: 12px;
+}
+.navbar {
+  margin: 0;
+}
+.navbar .navbar-brand {
   padding: 1px 0 0 10px;
 }
-.navbar-brand img {
+.navbar .navbar-brand img {
   float: left;
   height: 40px;
   margin-top: 4px;
 }
-.navbar-brand h3 {
+.navbar .navbar-brand h3 {
   font-weight: 700;
   text-transform: uppercase;
   float: left;
@@ -7195,8 +7311,25 @@ a.list-group-item-danger.active:focus {
   margin-left: 11px;
   color: #555555;
 }
+.navbar .user .dropdown-toggle {
+  padding: 5px 0 0 0!important;
+}
+.navbar .user .user-avatar {
+  height: 40px;
+}
 .loading {
   display: none;
+}
+.container-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 15px 0;
+}
+.container-bottom .pagination {
+  float: left;
+  margin: 0;
 }
 .container-fluid.container-welcome {
   padding: 0;
