@@ -43,6 +43,29 @@
   margin: 0;
   margin-right: 14px;
 }
+.albums {
+  .list-group {
+    overflow-y: scroll;
+    min-height: 547px;
+    .album {
+      span {
+        width: 91%;
+        white-space: nowrap;
+        display: inline-block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      i {
+        float: right;
+        font-size: 19px;
+      }
+    }
+  }
+}
+.audios {
+  overflow-y: scroll;
+  min-height: 547px;
+}
 .albums-container,
 .audios-container {
   h4 {
@@ -104,7 +127,7 @@
 .checkbox-all {
   float: right;
   margin-top: 8px!important;
-  margin-right: 15px;
+  margin-right: 32px;
 }
 .audios-container {
   .audios {
@@ -112,13 +135,14 @@
       border: 1px solid #e7e7e7;
       float: left;
       width: 100%;
-      display: inline-block;
+      display: flex;
+      align-items: center;
       &:hover {
         background: #f8f8f8;
       }
       .left {
         float: left;
-        width: 13%;
+        width: 80px;
         a {
           text-align: center;
           display: block;
@@ -130,10 +154,17 @@
       }
       .middle {
         float: left;
-        width: 58%;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         h5 {
           font-size: 17px;
           margin: 16px 0;
+          width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
           > span {
             &:first-of-type {
               font-weight: 600;
@@ -142,18 +173,18 @@
         }
       }
       .right {
-        float: left;
-        width: 29%;
+        float: right;
+        width: 180px;
         .download {
           float: right;
           font-size: 20px;
           padding: 10px 20px;
         }
         .duration {
-          font-size: 18px;
+          font-size: 15px;
           float: right;
           display: block;
-          margin-top: 12px;
+          margin-top: 14px;
         }
       }
     }

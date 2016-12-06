@@ -7179,6 +7179,25 @@ a.list-group-item-danger.active:focus {
   margin: 0;
   margin-right: 14px;
 }
+.albums .list-group {
+  overflow-y: scroll;
+  min-height: 547px;
+}
+.albums .list-group .album span {
+  width: 91%;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.albums .list-group .album i {
+  float: right;
+  font-size: 19px;
+}
+.audios {
+  overflow-y: scroll;
+  min-height: 547px;
+}
 .albums-container h4,
 .audios-container h4 {
   margin-top: 10px;
@@ -7243,20 +7262,21 @@ a.list-group-item-danger.active:focus {
 .checkbox-all {
   float: right;
   margin-top: 8px!important;
-  margin-right: 15px;
+  margin-right: 32px;
 }
 .audios-container .audios .audio {
   border: 1px solid #e7e7e7;
   float: left;
   width: 100%;
-  display: inline-block;
+  display: flex;
+  align-items: center;
 }
 .audios-container .audios .audio:hover {
   background: #f8f8f8;
 }
 .audios-container .audios .audio .left {
   float: left;
-  width: 13%;
+  width: 80px;
 }
 .audios-container .audios .audio .left a {
   text-align: center;
@@ -7268,18 +7288,25 @@ a.list-group-item-danger.active:focus {
 }
 .audios-container .audios .audio .middle {
   float: left;
-  width: 58%;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .audios-container .audios .audio .middle h5 {
   font-size: 17px;
   margin: 16px 0;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .audios-container .audios .audio .middle h5 > span:first-of-type {
   font-weight: 600;
 }
 .audios-container .audios .audio .right {
-  float: left;
-  width: 29%;
+  float: right;
+  width: 180px;
 }
 .audios-container .audios .audio .right .download {
   float: right;
@@ -7287,10 +7314,10 @@ a.list-group-item-danger.active:focus {
   padding: 10px 20px;
 }
 .audios-container .audios .audio .right .duration {
-  font-size: 18px;
+  font-size: 15px;
   float: right;
   display: block;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 .navbar {
   margin: 0;

@@ -2,7 +2,34 @@ var authTabId = null,
     clientID = 5763233,
     redirectUri = 'https://' + chrome.runtime.id + '.chromiumapp.org/provider_cb',
     redirectRe = new RegExp(redirectUri + '[#\?](.*)'),
-    storage = {};
+    storage = {},
+    authObj = {
+        'url': 'https://oauth.vk.com/authorize?client_id=' + clientID + '&redirect_uri=' + encodeURIComponent(redirectUri) + '&scope=audio&display=page&response_type=token&v=5.60',
+        'interactive': true
+    };
+function requestVK(method, params, callback) {
+    var req = function (method, params, callback) {
+        //if(captchaWindow) {
+        $.ajax({
+            method: "POST",
+            url: "https://api.vk.com/method/" + method,
+            data: params,
+            success: function (answer) {
+                if (!answer.error) {
+                    if (!answer.response) callback(answer);
+                    else callback(answer.response);
+                } else {
+                    if(answer.error.error_code === 14) openRequestedPopup(answer.error.captcha_img, answer.error.error_msg, answer.error.captcha_sid, method, params);else if (answer.error.error_code === 5) authorize();else callback(answer);
+                }
+            }
+        });
+        //}
+    };
+    params.access_token = storage.access_token;
+    params.v = "5.8";
+    req(method, params, callback);
+}
+
 function setSettings(data, callback) {
     if (data && Object.keys(data).length > 0) {
         for (property in data) {
@@ -56,10 +83,7 @@ function parseRedirectFragment(fragment) {
     return values;
 }
 function authorize(callback) {
-    chrome.identity.launchWebAuthFlow({
-        'url': 'https://oauth.vk.com/authorize?client_id=' + clientID + '&redirect_uri=' + encodeURIComponent(redirectUri) + '&scope=audio&display=page&response_type=token&v=5.60',
-        'interactive': true
-    }, function(redirect_url) {
+    chrome.identity.launchWebAuthFlow(authObj, function(redirect_url) {
         // console.log(redirect_url);
         if(chrome.runtime.lastError) {
             if(callback) callback(null, new Error(chrome.runtime.lastError));
@@ -79,35 +103,40 @@ function authorize(callback) {
         return;
     });
 }
-
+function launchWelcome(launchData, vkData) {
+    chrome.app.window.create('welcome.html', {
+        id: "welcomeWindow",
+        innerBounds: {
+            minWidth: 670,
+            minHeight: 500,
+            maxWidth: 800,
+            maxHeight: 520
+        }
+        // resizable: false
+    }, function (win) {
+        win.contentWindow.launchData = launchData;
+    });
+}
+function launchMain(launchData, vkData) {
+    chrome.app.window.create('index.html', {
+        id: "mainWindow",
+        innerBounds: {
+            minWidth: 780,
+            minHeight: 640
+        },
+        resizable: true
+    }, function (win) {
+        win.contentWindow.launchData = launchData;
+        win.contentWindow.vkData = vkData;
+    });
+}
 chrome.app.runtime.onLaunched.addListener(function(launchData) {
     getSettings(function(vkData, error) {
+        console.log(vkData, error);
         if(error) {//not logged in
-            chrome.app.window.create('welcome.html', {
-                id: "welcomeWindow",
-                innerBounds: {
-                    minWidth: 670,
-                    minHeight: 500,
-                    maxWidth: 800,
-                    maxHeight: 520
-                }
-                // resizable: false
-            }, function (win) {
-                win.contentWindow.launchData = launchData;
-            });
+            launchWelcome(launchData, vkData);
         } else {
-            chrome.app.window.create('index.html', {
-                id: "mainWindow",
-                innerBounds: {
-                    minWidth: 780,
-                    minHeight: 640
-                },
-                resizable: true
-            }, function (win) {
-                console.log(vkData, error);
-                win.contentWindow.launchData = launchData;
-                win.contentWindow.vkData = vkData;
-            });
+            launchMain(launchData, vkData);
         }
     });
 });
@@ -118,10 +147,57 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         console.log('message', message, 'sender', sender, 'sendResponse', sendResponse);
         if(action == 'authorize') {
             authorize(function(vkData, error){
-                if(error) sendResponse({error: error});
-                else sendResponse(vkData);
+                if(error) {
+                    sendResponse({error: error});
+                } else {
+                    sendResponse(vkData);
+                    chrome.app.window.get('welcomeWindow').close();
+                    launchMain(false, vkData);
+                }
+            });
+            return true;
+        } else if(action == 'logout') {
+            console.log('logout', storage);
+            chrome.identity.removeCachedAuthToken({token: storage.access_token}, function(){
+                chrome.storage.sync.remove('vk_user_data', function () {
+                //default
+                    chrome.app.window.get('mainWindow').close();
+                    launchWelcome(false, false);
+                });
+            });
+            return true;
+        } else if(action == 'getMyInfo') {
+            requestVK('users.get', {
+                fields: 'photo_50,online,status,last_seen'
+            }, function (answer) {
+                if(answer.length > 0) sendResponse(answer[0]);
+                else sendResponse(null);
+            });
+            return true;
+        } else if(action == 'getAlbums') {
+            requestVK('audio.getAlbums', {
+                count: 100
+            }, function (answer) {
+                sendResponse(answer);
+            });
+            return true;
+        } else if(action == 'getAudios') {
+            var count = message.count || 20,
+                page = message.page || 0,
+                offset = 0;
+            if(count > 100) count = 100;
+            offset = page * count;
+            requestVK('audio.get', {
+                need_user: 0,
+                count: count,
+                offset: offset
+            }, function (answer) {
+                answer.page = page;
+                answer.num = count;
+                sendResponse(answer);
             });
             return true;
         }
+
     }
 });
