@@ -47,10 +47,10 @@ function requestVK(method, params, callback) {
                     else callback(answer.response);
                     // openRequestedPopup();
                 } else {
+                    console.info(answer.error.error_msg);
                     if(answer.error.error_code === 14) {
                         openRequestedPopup(answer.error.captcha_img, answer.error.error_msg, answer.error.captcha_sid, method, params);
                     } else if (answer.error.error_code === 5) {
-                        console.info(answer.error.error_msg);
                         logOut();
                     } else {
                         //openRequestedPopup
@@ -158,7 +158,7 @@ function downloadPause(audio, callback) {
 }
 function downloadStart(audio, callback) {
     if(audio.action) delete audio.action;
-    saveAudio(audio.href, 'image.mp3');
+    // saveAudio(audio.href, 'image.mp3');
 }
 
 function setSettings(data, callback, key) {

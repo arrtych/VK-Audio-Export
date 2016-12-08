@@ -15,7 +15,46 @@ function sendMessage(action, callback, data) {
         });
     }
 }
-
+function saveAudio(download, $download) {
+    if(download.href) {
+        var xhr = new XMLHttpRequest();
+        chrome.storage.local.get('default_save_dir', function (data) {
+            console.log('DATA', data);
+            xhr.open("GET", download.href);
+            xhr.responseType = "blob";
+            console.time('download.finish');
+            $download.addClass('downloading');
+            xhr.onload = function () {
+                var blob = xhr.response;
+                console.timeEnd('download.finish');
+                console.info(download);
+                chrome.storage.local.get('default_save_dir', function (items) {
+                    console.log('default_save_dir', items.default_save_dir);
+                    chrome.fileSystem.restoreEntry(items.default_save_dir, function (restoredEntry) {
+                        console.log('restoredEntry', restoredEntry);
+                        chrome.fileSystem.getWritableEntry(restoredEntry, function (writeEntry) {
+                            console.log('writeEntry', writeEntry);
+                            writeEntry.getFile(download.artist + " - " + download.title + '.mp3', {
+                                create: true
+                            }, function (fileEntry) {
+                                console.log('fileEntry', fileEntry);
+                                fileEntry.createWriter(function (writer) {
+                                    writer.onwriteend = function (e) {
+                                        console.info('file.ready');
+                                        e.currentTarget.truncate(e.currentTarget.position);
+                                    };
+                                    writer.write(blob);
+                                });
+                            });
+                        });
+                    });
+                });
+            };
+            xhr.send()
+        });
+    } else return false;
+    // xhr.overrideMimeType("application/octet-stream"); // Or what ever mimeType you want.
+}
 $(document).ready(function(){
     console.log(vkData, downloads, download);
     var keys = Object.keys(downloads),
@@ -38,9 +77,10 @@ $(document).ready(function(){
                 $download.find('.start-pause').on('click', function (event) {
                     var $that = $(this);
                     console.log('startAudioDownload', event, e);
-                    sendMessage('startAudioDownload', function (response) {
-                        console.log('startAudioDownload', response, e);
-                    }, e);
+                    saveAudio(e, $download);
+                    // sendMessage('startAudioDownload', function (response) {
+                    //     console.log('startAudioDownload', response, e);
+                    // }, e);
                     // console.log('download', href, artist, title);
                     event.preventDefault();
                 });
@@ -56,7 +96,7 @@ $(document).ready(function(){
                 return;
             }
             // use local storage to retain access to this file
-            chrome.storage.local.set({'chosenFile': chrome.fileSystem.retainEntry(theEntry)});
+            chrome.storage.local.set({'default_save_dir': chrome.fileSystem.retainEntry(theEntry)});
             if (theEntry.isDirectory) {
                 console.log(theEntry);
             }
