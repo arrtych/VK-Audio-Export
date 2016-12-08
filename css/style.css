@@ -7241,6 +7241,10 @@ a.list-group-item-danger.active:focus {
   overflow-y: scroll;
   min-height: 547px;
 }
+.albums .list-group .album {
+  font-size: 17px;
+  padding-bottom: 2px;
+}
 .albums .list-group .album span {
   width: 91%;
   white-space: nowrap;
@@ -7278,6 +7282,7 @@ a.list-group-item-danger.active:focus {
 .tracks-num .label {
   margin-right: 5px;
 }
+.download .checkbox,
 .audio .checkbox,
 .checkbox-all {
   width: 20px;
@@ -7287,6 +7292,7 @@ a.list-group-item-danger.active:focus {
   margin-top: 12px;
   margin-right: 14px;
 }
+.download .checkbox label,
 .audio .checkbox label,
 .checkbox-all label {
   width: 20px;
@@ -7300,6 +7306,7 @@ a.list-group-item-danger.active:focus {
   border-radius: 4px;
   box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0, 0, 0, 0.5);
 }
+.download .checkbox label:after,
 .audio .checkbox label:after,
 .checkbox-all label:after {
   content: '';
@@ -7315,14 +7322,17 @@ a.list-group-item-danger.active:focus {
   opacity: 0;
   transform: rotate(-45deg);
 }
+.download .checkbox label:hover::after,
 .audio .checkbox label:hover::after,
 .checkbox-all label:hover::after {
   opacity: 0.5;
 }
+.download .checkbox input[type=checkbox],
 .audio .checkbox input[type=checkbox],
 .checkbox-all input[type=checkbox] {
   visibility: hidden;
 }
+.download .checkbox input[type=checkbox]:checked + label:after,
 .audio .checkbox input[type=checkbox]:checked + label:after,
 .checkbox-all input[type=checkbox]:checked + label:after {
   opacity: 1;
@@ -7390,6 +7400,76 @@ a.list-group-item-danger.active:focus {
   font-size: 1.2em;
   margin-top: 6px;
   margin-bottom: 0;
+}
+.captcha-form .captcha-img {
+  height: 55px;
+  display: block;
+  text-align: center;
+  margin: 0 auto;
+}
+.downloads-container #choose_dir {
+  float: right;
+  margin-right: 10px;
+  padding: 6px 8px 3px;
+  position: relative;
+  top: 5px;
+}
+.downloads-container #choose_dir i {
+  font-size: 12px;
+}
+.downloads-container #choose_dir span {
+  padding-right: 7px;
+}
+.downloads-container .checkbox-all {
+  margin-right: 20px;
+}
+.downloads-container .downloads .download {
+  border: 1px solid #e7e7e7;
+  float: left;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+.downloads-container .downloads .download:hover {
+  background: #f8f8f8;
+}
+.downloads-container .downloads .download .middle {
+  float: left;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.downloads-container .downloads .download .middle h5 {
+  font-size: 17px;
+  margin: 12px 0;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.downloads-container .downloads .download .middle h5 > span:first-of-type {
+  font-weight: 600;
+}
+.downloads-container .downloads .download .checkbox {
+  margin: 0 0 0 15px!important;
+}
+.downloads-container .downloads .download .right {
+  float: right;
+}
+.downloads-container .downloads .download .right .start-pause i {
+  font-size: 21px;
+  vertical-align: middle;
+}
+.downloads-container .downloads .download .right .start-pause:hover i {
+  font-size: 22px;
+}
+.downloads-container .downloads .download .right .duration {
+  font-size: 15px;
+  float: right;
+  display: block;
+  margin-top: 14px;
 }
 .audios-container .audios .audio {
   border: 1px solid #e7e7e7;

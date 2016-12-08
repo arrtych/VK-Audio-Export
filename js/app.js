@@ -43,7 +43,7 @@ function getAudios(params, callback) {
                     id = e.owner_id + "_" + e.id;
                 var $audio = $('<div class="audio" data-owner-id="' + e.owner_id + '" data-audio-id="' + e.id + '"><div class="left">' +
                     '<a href="#"><i class="fa fa-play-circle fa-2x" aria-hidden="true"></i></a></div>' +
-                    '<div class="middle"><h5><span>' + e.artist + '</span> - <span title="' + e.title + '">' + e.title + '</span></h5>' +
+                    '<div class="middle"><h5><span class="artist">' + e.artist + '</span> - <span class="title" title="' + e.title + '">' + e.title + '</span></h5>' +
                     '</div><div class="right"><div class="checkbox">' +
                     '<input type="checkbox" value="None" id="checkbox-' + id + '" name="check" />' +
                     '<label for="checkbox-' + id + '"></label></div>' +
@@ -51,6 +51,26 @@ function getAudios(params, callback) {
                     '<span class="duration" data-duration="' + e.duration + '">' + (e.duration + "").toHHMMSS() + '</span>' +
                     '</div>' +
                     '</div>');
+                $audio.find('.download').on('click', function(e){
+                    var $that = $(this),
+                        $parent = $that.parent().parent(),
+                        href = $that.attr('href'),
+                        artist = $parent.find('.artist').text(),
+                        title = $parent.find('.title').text(),
+                        audio_id = $parent.data('audio-id'),
+                        owner_id = $parent.data('owner-id'),
+                        id = owner_id + "_" + audio_id;
+                    sendMessage('addAudioDownload', function(response){
+                        console.log('addAudioDownload', response);
+                    }, {
+                        id: id,
+                        href: href,
+                        title: title,
+                        artist: artist
+                    });
+                    console.log('download', href, artist, title);
+                    e.preventDefault();
+                });
                 $('.audios').append($audio);
             }
             var pages = response.count / response.num;
@@ -126,10 +146,15 @@ function getImageBlob(url, callback) {
 }
 $(document).ready(function(){
     $(window).on('resize', function(){
-        var windowHeight = $(window).height();
+        var windowHeight = $(window).height(),
+            playerHeight = $('.player-container').outerHeight(),
+            headerHeight = $('.albums-container h4').outerHeight(),
+            paginationHeight = $('.pagination').outerHeight(),
+            navHeight  = $('.navbar').outerHeight();
         console.log('windowHeight', windowHeight);
-        $('.albums .list-group').height(windowHeight - 100);
-        $('.audios').height(windowHeight - 170);
+        console.log(windowHeight, playerHeight, headerHeight);
+        $('.albums .list-group').height(windowHeight - playerHeight - headerHeight - navHeight - 20);
+        $('.audios').height(windowHeight - paginationHeight - headerHeight - navHeight - 20);
     });
     console.log('launchData', window.launchData);
     console.log('vkData', window.vkData);
