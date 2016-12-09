@@ -7430,6 +7430,7 @@ a.list-group-item-danger.active:focus {
   display: flex;
   align-items: center;
   padding: 0 20px;
+  position: relative;
 }
 .downloads-container .downloads .download:hover {
   background: #f8f8f8;
@@ -7470,6 +7471,14 @@ a.list-group-item-danger.active:focus {
   float: right;
   display: block;
   margin-top: 14px;
+}
+.downloads-container .downloads .download .progress {
+  position: absolute;
+  margin: 0;
+  height: 4px;
+  bottom: 5px;
+  right: 82px;
+  left: 20px;
 }
 .audios-container .audios .audio {
   border: 1px solid #e7e7e7;

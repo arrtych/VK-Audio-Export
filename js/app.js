@@ -61,7 +61,9 @@ function getAudios(params, callback) {
                         owner_id = $parent.data('owner-id'),
                         id = owner_id + "_" + audio_id;
                     sendMessage('addAudioDownload', function(response){
-                        console.log('addAudioDownload', response);
+                        if(response && !response.error && response.count) {
+                            $('.downloads-count').text(response.count);
+                        }
                     }, {
                         id: id,
                         href: href,
@@ -158,6 +160,8 @@ $(document).ready(function(){
     });
     console.log('launchData', window.launchData);
     console.log('vkData', window.vkData);
+    console.log('downloads', window.downloads);
+    if(window.downloads) $('.downloads-count').text(Object.keys(window.downloads).length);
     $('.logout').on('click', function(e){
         sendMessage('logout', function(response){
 

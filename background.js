@@ -75,89 +75,18 @@ function initDownloads(callback) {
 function downloadRemove(audio, callback) {
 
 }
-function writeFileEntry(writableEntry, opt_blob, callback) {
-    if (!writableEntry) {
-        //output.textContent = 'Nothing selected.';
-        return;
-    }
 
-    writableEntry.createWriter(function(writer) {
-
-        //writer.onerror = errorHandler;
-        writer.onwriteend = callback;
-
-        // If we have data, write it to the file. Otherwise, just use the file we
-        // loaded.
-        if (opt_blob) {
-            writer.truncate(opt_blob.size);
-            waitForIO(writer, function() {
-                writer.seek(0);
-                writer.write(opt_blob);
-            });
-        }
-        else {
-            chosenEntry.file(function(file) {
-                writer.truncate(file.fileSize);
-                waitForIO(writer, function() {
-                    writer.seek(0);
-                    writer.write(file);
-                });
-            });
-        }
-    }, errorHandler);
-}
-function saveAudio(url) {
-    var xhr = new XMLHttpRequest();
-    chrome.storage.local.get('chosenFile', function(data){
-        console.log('DATA', data);
-        xhr.open("GET", url);
-        xhr.responseType = "blob";
-        xhr.onload = function() {
-            var blob = xhr.response;
-            var myReader = new FileReader();
-            myReader.readAsArrayBuffer(blob);
-            myReader.addEventListener("loadend", function(e) {
-                var buffer = e.srcElement.result;//arraybuffer object
-                // var blob = new Blob(buffer, {type: "audio/mpeg"});
-                var config = {type: 'saveFile', suggestedName: data.name};
-                chrome.fileSystem.chooseEntry(config, function(writableEntry) {
-                    writeFileEntry(writableEntry, buffer, function(e) {
-                        console.info('Write complete :)');
-                    });
-                });
-            });
-        };
-        xhr.send()
-    });
-    // xhr.overrideMimeType("application/octet-stream"); // Or what ever mimeType you want.
-}
-function SaveToDisk(fileURL, fileName) {
-    // for non-IE
-    if (!window.ActiveXObject) {
-        var save = document.createElement('a');
-        save.href = fileURL;
-        save.target = '_blank';
-        save.download = fileName || fileURL;
-        var evt = document.createEvent('MouseEvents');
-        evt.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0,
-            false, false, false, false, 0, null);
-        save.dispatchEvent(evt);
-        (window.URL || window.webkitURL).revokeObjectURL(save.href);
-    }
-
-    // for IE
-    else if ( !! window.ActiveXObject && document.execCommand)     {
-        var _window = window.open(fileURL, "_blank");
-        _window.document.close();
-        _window.document.execCommand('SaveAs', true, fileName || fileURL);
-        _window.close();
-    }
-}
 function downloadPause(audio, callback) {
 
 }
 function downloadStart(audio, callback) {
     if(audio.action) delete audio.action;
+    setSettings(audio, function(data, error, count){
+        //settings setting done
+        if(callback) {
+            callback(data, error, count);
+        }
+    }, 'downloads');
     // saveAudio(audio.href, 'image.mp3');
 }
 
@@ -171,12 +100,17 @@ function setSettings(data, callback, key) {
             if(data.id) audio[data.id] = data;
             data = $.extend(audio, downloads);
         }
+        var count = Object.keys(data).length;
         obj[key] = data;
         // console.log('setting SETTING', key, obj, data);
         chrome.storage.sync.set(obj, function () {
-            if(key == 'vk_user_data') storage = data;
-            else if(key == 'downloads') downloads = data;
-            if(callback) callback(data);
+            if(key == 'vk_user_data') {
+                storage = data;
+                if(callback) callback(data);
+            } else if(key == 'downloads') {
+                downloads = data;
+                if(callback) callback(data, false, count);
+            }
         });
     } else {
         if (callback) callback(null, new Error('Empty input data'));
@@ -257,7 +191,7 @@ function launchWelcome(launchData, vkData) {
         win.contentWindow.launchData = launchData;
     });
 }
-function launchMain(launchData, vkData) {
+function launchMain(launchData, vkData, downloads) {
     chrome.app.window.create('index.html', {
         id: "mainWindow",
         innerBounds: {
@@ -268,13 +202,15 @@ function launchMain(launchData, vkData) {
     }, function (win) {
         win.contentWindow.launchData = launchData;
         win.contentWindow.vkData = vkData;
+        if(downloads) win.contentWindow.downloads = downloads;
     });
 }
 function logOut() {
     chrome.identity.removeCachedAuthToken({token: storage.access_token}, function(){
         chrome.storage.sync.remove('vk_user_data', function () {
             //default
-            chrome.app.window.get('mainWindow').close();
+            var mainWindow = chrome.app.window.get('mainWindow');
+            if(mainWindow) mainWindow.close();
             launchWelcome(false, false);
         });
     });
@@ -303,7 +239,9 @@ chrome.app.runtime.onLaunched.addListener(function(launchData) {
         if(error) {//not logged in
             launchWelcome(launchData, vkData);
         } else {
-            launchMain(launchData, vkData);
+            initDownloads(function(downloadsData) {
+                launchMain(launchData, vkData, downloadsData);
+            });
         }
     });
 });
@@ -317,9 +255,11 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                 if(error) {
                     sendResponse({error: error});
                 } else {
-                    sendResponse(vkData);
-                    chrome.app.window.get('welcomeWindow').close();
-                    launchMain(false, vkData);
+                    initDownloads(function(downloadsData) {
+                        sendResponse(vkData);
+                        chrome.app.window.get('welcomeWindow').close();
+                        launchMain(false, vkData);
+                    });
                 }
             });
             return true;
@@ -363,14 +303,17 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             launchDownloadManager(message, storage);
             return true;
         } else if(action == 'addAudioDownload') {
-            downloadAdd(message, function(audio){
-                sendResponse(true);
+            //downloadAdd(message, function(audio){
+            downloadStart(message, function(audio, error, count) {
+                if(error) sendResponse({error: error});
+                else sendResponse({count: count});
                 launchDownloadManager(message, storage);
             });
+            //});
             return true;
         }
         else if(action == 'startAudioDownload') {
-            downloadStart(message, function(audio){
+            downloadStart(message, function(audio, error, count){
                 sendResponse(true);
             });
             return true;
