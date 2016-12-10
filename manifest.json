@@ -6,8 +6,9 @@
   "app": {
     "background": {
       "scripts": [
-        "background.js",
-        "/js/jquery.min.js"
+        "/js/jquery.min.js",
+        "/js/download_manager.js",
+        "/js/background.js"
       ]
     }
   },
@@ -19,7 +20,7 @@
     "storage",
     "https://oauth.vk.com/authorize",
     "https://api.vk.com/*",
-    "https://pp.vk.me/*"
+    "https://*.vk.me/*"
   ],
   "icons": {
     "16": "img/icon16.png",

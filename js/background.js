@@ -8,6 +8,7 @@ var authTabId = null,
         'interactive': true
     },
     downloads = {},
+    downloadManager = new DownloadManager(),
     chosenEntry = null;
 function openRequestedPopup(strUrl, strWindowName, sid, method, params) { //todo: must finish with captcha
     chrome.app.window.create(
@@ -80,14 +81,20 @@ function downloadPause(audio, callback) {
 
 }
 function downloadStart(audio, callback) {
+    var loadingIntoLocal;
     if(audio.action) delete audio.action;
-    setSettings(audio, function(data, error, count){
-        //settings setting done
-        if(callback) {
-            callback(data, error, count);
-        }
-    }, 'downloads');
-    // saveAudio(audio.href, 'image.mp3');
+    loadingIntoLocal = downloadManager.addTask(audio);
+    loadingIntoLocal.done(function(blob) {
+        // imgNode.css({
+        //     backgroundImage: 'url(' + imgBlobUrl + ')'
+        // });
+        // return imgNode.html('');
+        console.log('download done', blob);
+    });
+    return loadingIntoLocal.progress(function(percentComplete) {
+        // return $('.percentBox', imgNode).html(percentComplete + '%');
+        console.log('download progress', percentComplete);
+    });
 }
 
 function setSettings(data, callback, key) {

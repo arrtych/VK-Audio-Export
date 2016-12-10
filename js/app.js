@@ -54,7 +54,7 @@ function getAudios(params, callback) {
                 $audio.find('.download').on('click', function(e){
                     var $that = $(this),
                         $parent = $that.parent().parent(),
-                        href = $that.attr('href'),
+                        url = $that.attr('href'),
                         artist = $parent.find('.artist').text(),
                         title = $parent.find('.title').text(),
                         audio_id = $parent.data('audio-id'),
@@ -66,11 +66,10 @@ function getAudios(params, callback) {
                         }
                     }, {
                         id: id,
-                        href: href,
+                        url: url,
                         title: title,
                         artist: artist
                     });
-                    console.log('download', href, artist, title);
                     e.preventDefault();
                 });
                 $('.audios').append($audio);

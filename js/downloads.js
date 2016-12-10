@@ -1,5 +1,34 @@
 var downloads = window.downloads || {},
     default_save_dir = false;
+
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+    //authorizing
+    var action = message.action;
+    console.log('chrome.runtime.onMessage.addListener', action, sender, message);
+    if (sender.url && sender.url.indexOf('background_page.html') != -1) {
+        if (action) {
+            if(action == 'runNextTask') {
+                var savedAudio = saveAudio(message.data, $());
+                savedAudio.fail(function(e){
+                    console.log('saveAudio.fail', e);
+                    sendResponse({
+                        error: e
+                    });
+                });
+                savedAudio.done(function(audio){
+                    console.log('saveAudio.done', audio);
+                    sendResponse(audio);
+                });
+                savedAudio.progress(function(percentComplete) {
+                    console.log('messageSending.progress', percentComplete);
+                });
+                return true;
+            }
+        }
+    }
+});
+
+
 function sendMessage(action, callback, data) {
     if(action) {
         var msg = {
@@ -24,29 +53,23 @@ function initDownloads(callback) {
     });
 }
 function saveAudio(download, $download, callback) {
+    var downloadDef = new $.Deferred();
     if(default_save_dir) {
-        if(download.href) {
+        if(download.url) {
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", download.href);
+            xhr.open("GET", download.url);
             xhr.responseType = "blob";
-            console.time('download.finish');
-            $download.addClass('downloading');
-            var $progress = $download.find('.progress');
-            $progress.removeClass('hide');
             xhr.onprogress = function (event) {
-                if (event.lengthComputable) {  //event.loaded the bytes browser receive
-                    //evt.total the total bytes seted by the header
-                    //
-                    var percentComplete = (event.loaded / event.total) * 100;
-                    console.log(percentComplete);
-                    $progress.children().width(percentComplete + "%");
-                    // $('#progressbar').progressbar( "option", "value", percentComplete );
+                if (event.lengthComputable) {
+                    var percentComplete = Math.round(event.loaded / event.total * 100);
+                    return downloadDef.notify(percentComplete);
                 }
+            };
+            xhr.onerror = function(e){
+                downloadDef.reject(e);
             };
             xhr.onload = function (event) {
                 var blob = xhr.response;
-                console.timeEnd('download.finish');
-                console.info(download);
                 chrome.fileSystem.restoreEntry(default_save_dir, function (restoredEntry) {
                     console.log('restoredEntry', restoredEntry);
                     chrome.fileSystem.getWritableEntry(restoredEntry, function (writeEntry) {
@@ -59,16 +82,15 @@ function saveAudio(download, $download, callback) {
                                 console.log('writer', writer);
                                 writer.onabort = function (e) {
                                     console.error('writer onabort', e);
-                                    callback(false, e);
+                                    downloadDef.reject(e);
                                 };
                                 writer.onerror = function (e) {
                                     console.error('writer error', e);
-                                    callback(false, e);
+                                    downloadDef.reject(e);
                                 };
                                 writer.onwriteend = function (e) {
                                     console.info('file.ready');
-                                    $progress.addClass('hide');
-                                    callback(true);
+                                    downloadDef.resolve(download);
                                     // e.currentTarget.truncate(e.currentTarget.position);
                                 };
                                 writer.write(blob);
@@ -78,8 +100,9 @@ function saveAudio(download, $download, callback) {
                 });
             };
             xhr.send();
-        }
-    } else callback(false, new Error('Empty save directory'));
+        } else downloadDef.reject(new Error('Empty url parameter'));
+    } else downloadDef.reject(new Error('Empty save directory'));
+    return downloadDef;
 }
 $(document).ready(function(){
     initDownloads(function(success, error) {
@@ -87,7 +110,7 @@ $(document).ready(function(){
         var keys = Object.keys(downloads),
             downloadsNum = keys.length;
         $('.downloads-num').text(downloadsNum);
-        if(default_save_dir)
+        // if(default_save_dir)
         if(downloadsNum > 0) {
             for (var i = 0; i < downloadsNum; i++) {
                 var key = keys[i],
@@ -108,7 +131,7 @@ $(document).ready(function(){
                     $download.find('.start-pause').on('click', function (event) {
                         var $that = $(this);
                         console.log('startAudioDownload', event, e);
-                        saveAudio(e, $download);
+                        saveAudio(e, $that.closest('.download'));
                         // sendMessage('startAudioDownload', function (response) {
                         //     console.log('startAudioDownload', response, e);
                         // }, e);
