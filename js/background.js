@@ -8,8 +8,8 @@ var authTabId = null,
         'interactive': true
     },
     downloads = {},
-    downloadManager = new DownloadManager(),
-    chosenEntry = null;
+    downloadManager = new DownloadManager();
+
 function openRequestedPopup(strUrl, strWindowName, sid, method, params) { //todo: must finish with captcha
     chrome.app.window.create(
         'captcha.html',
@@ -68,8 +68,8 @@ function requestVK(method, params, callback) {
 }
 
 function initDownloads(callback) {
-    getSettings(function(downloadsData){
-        callback(downloadsData);
+    getSettings(function(downloadsData, error){
+        callback(downloadsData, error);
     }, 'downloads');
 }
 
@@ -80,21 +80,26 @@ function downloadRemove(audio, callback) {
 function downloadPause(audio, callback) {
 
 }
-function downloadStart(audio, callback) {
+function downloadStart(audio) {
     var loadingIntoLocal;
     if(audio.action) delete audio.action;
     loadingIntoLocal = downloadManager.addTask(audio);
-    loadingIntoLocal.done(function(blob) {
-        // imgNode.css({
-        //     backgroundImage: 'url(' + imgBlobUrl + ')'
-        // });
-        // return imgNode.html('');
-        console.log('download done', blob);
-    });
-    return loadingIntoLocal.progress(function(percentComplete) {
-        // return $('.percentBox', imgNode).html(percentComplete + '%');
-        console.log('download progress', percentComplete);
-    });
+    // console.log('downloadStart', audio);
+    // loadingIntoLocal.done(function(blob) {
+    //     // imgNode.css({
+    //     //     backgroundImage: 'url(' + imgBlobUrl + ')'
+    //     // });
+    //     // return imgNode.html('');
+    //     console.log('download done', blob);
+    // });
+    // loadingIntoLocal.fail(function(error) {
+    //     // imgNode.css({
+    //     //     backgroundImage: 'url(' + imgBlobUrl + ')'
+    //     // });
+    //     // return imgNode.html('');
+    //     console.error('download fail', error);
+    // });
+    return loadingIntoLocal;
 }
 
 function setSettings(data, callback, key) {
@@ -222,8 +227,8 @@ function logOut() {
         });
     });
 }
-function launchDownloadManager(download, vkData) {
-    initDownloads(function(downloadsData){
+function launchDownloadManager(callback, data) {
+    initDownloads(function(downloads, error){
         chrome.app.window.create('downloads.html', {
             id: "downloadsWindow",
             innerBounds: {
@@ -233,20 +238,20 @@ function launchDownloadManager(download, vkData) {
             showInShelf: true,
             resizable: true
         }, function (win) {
-            console.log('downloads.html', download, vkData, downloadsData);
-            win.contentWindow.vkData = vkData;
-            if(download) win.contentWindow.download = download;
-            if(downloadsData) win.contentWindow.downloads = downloadsData;
+            if(data) win.contentWindow.launchData = data;
+            if(downloads)  win.contentWindow.downloads = downloads;
+            if(callback) callback(downloads, error);
         });
     });
 }
 chrome.app.runtime.onLaunched.addListener(function(launchData) {
+    //must init all options and settings
     getSettings(function(vkData, error) {
         console.log(vkData, error);
         if(error) {//not logged in
             launchWelcome(launchData, vkData);
         } else {
-            initDownloads(function(downloadsData) {
+            initDownloads(function(downloadsData, error) {
                 launchMain(launchData, vkData, downloadsData);
             });
         }
@@ -306,22 +311,26 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             });
             return true;
         } else if(action == 'openDownloadManager') {
-            sendResponse(true);
-            launchDownloadManager(message, storage);
+            launchDownloadManager(function(downloads, error){
+                sendResponse(true);
+            });
             return true;
         } else if(action == 'addAudioDownload') {
-            //downloadAdd(message, function(audio){
-            downloadStart(message, function(audio, error, count) {
-                if(error) sendResponse({error: error});
-                else sendResponse({count: count});
-                launchDownloadManager(message, storage);
+            launchDownloadManager(function(downloads, error){
+                downloadStart(message);
             });
-            //});
             return true;
         }
         else if(action == 'startAudioDownload') {
-            downloadStart(message, function(audio, error, count){
-                sendResponse(true);
+            launchDownloadManager(function(downloads, error){
+                var downloadDef = downloadStart(message);
+                downloadDef.done(function(answer){
+                    sendResponse(answer);
+                });
+                downloadDef.fail(function(error){
+                    console.error('downloadDef', error);
+                    sendResponse({error: error});
+                });
             });
             return true;
         }

@@ -1,4 +1,11 @@
-var lastContentSendMessage = null;
+var lastContentSendMessage = null,
+    service, tracker;
+
+service = analytics.getService('vk_audio_export');
+service.getConfig().addCallback(initAnalyticsConfig);
+// Get a Tracker using your Google Analytics app Tracking ID.
+tracker = service.getTracker('UA-88814053-1');
+tracker.sendAppView('mainWindow');
 
 String.prototype.toHHMMSS = function () {
     var sec_num = parseInt(this, 10); // don't forget the second param
@@ -41,7 +48,7 @@ function getAudios(params, callback) {
             for(var i = 0; i < response.items.length; i++) {
                 var e = response.items[i],
                     id = e.owner_id + "_" + e.id;
-                var $audio = $('<div class="audio" data-owner-id="' + e.owner_id + '" data-audio-id="' + e.id + '"><div class="left">' +
+                var $audio = $('<div class="audio audio-' + id + '" data-owner-id="' + e.owner_id + '" data-audio-id="' + e.id + '"><div class="left">' +
                     '<a href="#"><i class="fa fa-play-circle fa-2x" aria-hidden="true"></i></a></div>' +
                     '<div class="middle"><h5><span class="artist">' + e.artist + '</span> - <span class="title" title="' + e.title + '">' + e.title + '</span></h5>' +
                     '</div><div class="right"><div class="checkbox">' +
@@ -60,9 +67,36 @@ function getAudios(params, callback) {
                         audio_id = $parent.data('audio-id'),
                         owner_id = $parent.data('owner-id'),
                         id = owner_id + "_" + audio_id;
-                    sendMessage('addAudioDownload', function(response){
-                        if(response && !response.error && response.count) {
-                            $('.downloads-count').text(response.count);
+                    $('.audio-' + id).addClass('downloading');
+                    sendMessage('startAudioDownload', function(response){
+                        console.log('startAudioDownload', response);
+                        if(response && !response.error) {
+                            if(response.count) $('.downloads-count').text(response.count);
+                            if(response.data) {
+                                var data = response.data;
+                                if(data.audio && data.audio.id) {
+                                    $('.audio-' + data.audio.id).removeClass('downloading').addClass('downloaded');
+                                    $that.attr('title', 'Audio downloaded');
+                                    $that.off('click');
+                                    $that.on('click', function(e){
+                                        e.preventDefault();
+                                    });
+                                }
+                            }
+                            tracker.sendEvent('Audio', 'download.finish', JSON.stringify({
+                                userID: '',
+                                title: title,
+                                artist: artist,
+                                id: id
+                            }));
+                        } else {
+                            $('.audio-' + id).removeClass('downloading').addClass('download-error');
+                            tracker.sendEvent('Audio', 'download.error', JSON.stringify({
+                                userID: '',
+                                title: title,
+                                artist: artist,
+                                id: id
+                            }));
                         }
                     }, {
                         id: id,

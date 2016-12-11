@@ -2,7 +2,7 @@
   "name": "VK Audio Export",
   "version": "0.1",
   "manifest_version": 2,
-  "minimum_chrome_version": "31",
+  "minimum_chrome_version": "29",
   "app": {
     "background": {
       "scripts": [
@@ -18,6 +18,7 @@
     },
     "identity",
     "storage",
+    "https://www.google-analytics.com/*",
     "https://oauth.vk.com/authorize",
     "https://api.vk.com/*",
     "https://*.vk.me/*"

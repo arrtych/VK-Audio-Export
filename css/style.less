@@ -359,6 +359,42 @@
           margin-top: 14px;
         }
       }
+      &.downloading {
+        .download {
+          i {
+            -webkit-animation: fa-spin 2s infinite linear;
+            animation: fa-spin 2s infinite linear;
+            text-align: center;
+            &:before {
+              content: "\f1ce";
+            }
+          }
+        }
+      }
+      &.download-error {
+        .download {
+          -webkit-animation: none;
+          animation: none;
+          i {
+            color: #ff4136;
+            &:before {
+              content: "\f00d";
+            }
+          }
+        }
+      }
+      &.downloaded {
+        .download {
+          -webkit-animation: none;
+          animation: none;
+          i {
+            color: #28b62c;
+            &:before {
+              content: "\f058";
+            }
+          }
+        }
+      }
     }
   }
 }

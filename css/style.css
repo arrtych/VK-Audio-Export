@@ -7538,6 +7538,34 @@ a.list-group-item-danger.active:focus {
   display: block;
   margin-top: 14px;
 }
+.audios-container .audios .audio.downloading .download i {
+  -webkit-animation: fa-spin 2s infinite linear;
+  animation: fa-spin 2s infinite linear;
+  text-align: center;
+}
+.audios-container .audios .audio.downloading .download i:before {
+  content: "\f1ce";
+}
+.audios-container .audios .audio.download-error .download {
+  -webkit-animation: none;
+  animation: none;
+}
+.audios-container .audios .audio.download-error .download i {
+  color: #ff4136;
+}
+.audios-container .audios .audio.download-error .download i:before {
+  content: "\f00d";
+}
+.audios-container .audios .audio.downloaded .download {
+  -webkit-animation: none;
+  animation: none;
+}
+.audios-container .audios .audio.downloaded .download i {
+  color: #28b62c;
+}
+.audios-container .audios .audio.downloaded .download i:before {
+  content: "\f058";
+}
 .navbar {
   margin: 0;
 }

@@ -11,16 +11,24 @@
         }
 
         DownloadManager.prototype.sendMessage = function(action, data) {
-            var message = new $.Deferred();
-            if(data.hasOwnProperty('promise')) delete data.promise;
+            var message = new $.Deferred(), promise;
+            if(data.hasOwnProperty('promise')) {
+                promise = data.promise;
+                delete data.promise;
+            }
             if(data.hasOwnProperty('xhr')) delete data.xhr;
             chrome.runtime.sendMessage({
                 action: action,
                 data: data
             }, function(answer){
                 if(!answer) {
-                    if(chrome.runtime.lastError) return message.reject(chrome.runtime.lastError);
-                } else return message.resolve(answer);
+                    if(chrome.runtime.lastError) {
+                        return message.reject(chrome.runtime.lastError, promise);
+                    }
+                } else {
+                    if(!answer.error) return message.resolve(answer, promise);
+                    else return message.reject(answer.error, promise);
+                }
             });
             return message;
         };
@@ -60,29 +68,30 @@
             this.enRoute.push(task);
             this.curTaskNum++;
             task.numRetries++;
+            // var messageDef = task.promise;
             //must send message to download manager window
             messageSending = this.sendMessage('runNextTask', task);
             messageSending.done((function(_this) {
-                return function(downloadInfo) {
-                    console.log('messageSending.done', downloadInfo);
+                return function(downloadInfo, promise) {
                     var i;
                     i = _this.enRoute.indexOf(task);
                     _this.enRoute.splice(i, 1);
                     // task.promise.resolve(imgBlobUrl);
                     _this.curTaskNum--;
+                    promise.resolve(downloadInfo);
+                    // console.log('messageSending.done', messageDef, downloadInfo);
                     return _this.runTasks();
                 };
             })(this));
             messageSending.fail((function(_this) {
-                return function() {
-                    if (task.numRetries < 3) {
-                        return _this.addTask(task);
-                    }
+                return function(error, promise) {
+                    promise.reject(task);
+                    // if (task.numRetries < 3) {
+                    //     return _this.addTask(task);
+                    // }
                 };
             })(this));
-            return messageSending.progress(function(percentComplete) {
-                return task.promise.notify(percentComplete);
-            });
+            return messageSending;
         };
 
         DownloadManager.prototype.pause = function() {
