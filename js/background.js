@@ -342,6 +342,24 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                 sendResponse(answer);
             });
             return true;
+        } else if(action == 'getAlbumAudios') {
+            var count = message.count || 20,
+                page = message.page || 0,
+                offset = 0,
+                album_id = message.album_id || 0;
+            if(count > 100) count = 100;
+            offset = page * count;
+            requestVK('audio.get', {
+                need_user: 0,
+                count: count,
+                offset: offset,
+                album_id: album_id
+            }, function (answer) {
+                answer.page = page;
+                answer.num = count;
+                sendResponse(answer);
+            });
+            return true;
         } else if(action == 'getAudios') {
             var count = message.count || 20,
                 page = message.page || 0,

@@ -7245,8 +7245,12 @@ a.list-group-item-danger.active:focus {
   font-size: 17px;
   padding-bottom: 2px;
 }
-.albums .list-group .album span {
-  width: 91%;
+.albums .list-group .album .badge {
+  position: relative;
+  top: 3px;
+}
+.albums .list-group .album span:not(.badge) {
+  width: 87%;
   white-space: nowrap;
   display: inline-block;
   overflow: hidden;
@@ -7269,6 +7273,8 @@ a.list-group-item-danger.active:focus {
 .audios {
   overflow-y: scroll;
   min-height: 547px;
+  border-top: 1px solid #eeeeee;
+  border-bottom: 1px solid #eeeeee;
 }
 .albums-container h4,
 .audios-container h4 {
@@ -7418,6 +7424,11 @@ a.list-group-item-danger.active:focus {
   font-size: 18px;
   margin: 0;
 }
+.downloads-container .downloaded-size {
+  font-size: 10px;
+  padding-left: 10px;
+  vertical-align: middle;
+}
 .downloads-container #action_all {
   float: right;
   position: relative;
@@ -7426,6 +7437,12 @@ a.list-group-item-danger.active:focus {
 }
 .downloads-container #action_all a:not(.dropdown-toggle) span {
   padding-left: 8px;
+}
+.downloads-container #action_all i {
+  font-size: 19px;
+  line-height: 1px;
+  position: relative;
+  top: 2px;
 }
 .downloads-container #action_all.paused .btn {
   background-color: #28B62C;
@@ -7572,6 +7589,18 @@ a.list-group-item-danger.active:focus {
 .downloads-container .downloads .download.paused .start-pause i:before {
   content: "\f144";
 }
+.audios-container .loading {
+  display: inline;
+  padding-left: 8px;
+  font-size: 15px;
+  margin-top: 8px;
+  vertical-align: middle;
+}
+.audios-container .loading i {
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+}
 .audios-container .audios .audio {
   border: 1px solid #e7e7e7;
   float: left;
@@ -7698,9 +7727,52 @@ a.list-group-item-danger.active:focus {
   right: 0;
   margin: 0;
 }
-.container-bottom .pagination {
-  float: left;
+.container-bottom .pagination-container .left-arrow,
+.container-bottom .pagination-container .right-arrow {
+  position: absolute;
+  top: 33px;
+  z-index: 99;
+  cursor: pointer;
+}
+.container-bottom .pagination-container .left-arrow:hover i,
+.container-bottom .pagination-container .right-arrow:hover i {
+  color: #23a127;
+}
+.container-bottom .pagination-container .left-arrow:active,
+.container-bottom .pagination-container .right-arrow:active {
+  top: 34px;
+}
+.container-bottom .pagination-container .left-arrow i,
+.container-bottom .pagination-container .right-arrow i {
+  font-size: 50px;
+  color: #28b62c;
+}
+.container-bottom .pagination-container .left-arrow {
+  left: 2%;
+}
+.container-bottom .pagination-container .right-arrow {
+  right: 2%;
+}
+.container-bottom .pagination-container .pagination {
+  position: absolute;
+  top: 20px;
   margin: 0;
+  left: 6%;
+  right: 6%;
+  width: 88%;
+}
+.container-bottom .pagination-container .pagination .owl-item a {
+  background-color: #eeeeee;
+  border-color: #e2e2e2;
+  cursor: pointer;
+  color: #555555;
+}
+.container-bottom .pagination-container .pagination .owl-item a.current-page {
+  z-index: 3;
+  color: #ffffff;
+  background-color: #158cba;
+  border-color: #127ba3;
+  cursor: default;
 }
 .container-fluid.container-welcome {
   padding: 0;

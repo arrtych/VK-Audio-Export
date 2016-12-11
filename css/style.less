@@ -50,8 +50,13 @@
     .album {
       font-size: 17px;
       padding-bottom: 2px;
-      span {
-        width: 91%;
+      .badge {
+        //background-color: #777;
+        position: relative;
+        top: 3px;
+      }
+      span:not(.badge) {
+        width: 87%;
         white-space: nowrap;
         display: inline-block;
         overflow: hidden;
@@ -77,6 +82,8 @@
 .audios {
   overflow-y: scroll;
   min-height: 547px;
+  border-top: 1px solid #eeeeee;
+  border-bottom: 1px solid #eeeeee;
 }
 .albums-container,
 .audios-container {
@@ -229,6 +236,11 @@
   }
 }
 .downloads-container {
+  .downloaded-size {
+    font-size: 10px;
+    padding-left: 10px;
+    vertical-align: middle;
+  }
   #action_all {
     float: right;
     position: relative;
@@ -238,6 +250,12 @@
       span {
         padding-left: 8px;
       }
+    }
+    i {
+      font-size: 19px;
+      line-height: 1px;
+      position: relative;
+      top: 2px;
     }
     &.paused {
       .btn {
@@ -404,6 +422,18 @@
   }
 }
 .audios-container {
+  .loading {
+    display: inline;
+    padding-left: 8px;
+    font-size: 15px;
+    margin-top: 8px;
+    vertical-align: middle;
+    i {
+      vertical-align: middle;
+      position: relative;
+      top: -2px;
+    }
+  }
   .audios {
     .audio {
       border: 1px solid #e7e7e7;
@@ -546,9 +576,54 @@
   left: 0;
   right: 0;
   margin: 0;
-  .pagination {
-    float: left;
-    margin: 0;
+  .pagination-container {
+    .left-arrow, .right-arrow {
+      position: absolute;
+      top: 33px;
+      z-index: 99;
+      cursor: pointer;
+      &:hover {
+        i {
+          color: #23a127;
+        }
+      }
+      &:active {
+        top: 34px;
+      }
+      i {
+        font-size: 50px;
+        color: #28b62c;
+      }
+    }
+    .left-arrow {
+      left: 2%;
+    }
+    .right-arrow {
+      right: 2%;
+    }
+    .pagination {
+      position: absolute;
+      top: 20px;
+      margin: 0;
+      left: 6%;
+      right: 6%;
+      width: 88%;
+      .owl-item {
+        a {
+          background-color: #eeeeee;
+          border-color: #e2e2e2;
+          cursor: pointer;
+          color: #555555;
+          &.current-page {
+            z-index: 3;
+            color: #ffffff;
+            background-color: #158cba;
+            border-color: #127ba3;
+            cursor: default;
+          }
+        }
+      }
+    }
   }
 }
 .container-fluid {

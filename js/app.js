@@ -41,8 +41,11 @@ function sendMessage(action, callback, data) {
         });
     }
 }
-function getAudios(params, callback) {
-    sendMessage('getAudios', function(response){
+function getAudios(params, callback, method) {
+    var $loader = $('.header .loading');
+    $loader.show();
+    if(!method) method = 'getAudios';
+    sendMessage(method, function(response){
         if(response.items) {
             $('.audios').empty();
             if(response.num) {
@@ -128,41 +131,64 @@ function getAudios(params, callback) {
             var pages = response.count / response.num;
             if(i < response.num) {
                 var percent = (100 - (i / response.num * 100));
-                $('.audios-loss').html("-" + percent + "%").removeClass('hide').addClass('show').attr('title', percent + '% удалённых треков');
+                $('.audios-loss').html("-" + percent + "%").removeClass('hide').addClass('show').tooltip('destroy').attr('title', percent + '% удалённых треков').tooltip('fixTitle').tooltip({
+                    placement: 'right'
+                });
             } else {
                 $('.audios-loss').removeClass('show').addClass('hide');
             }
+            // console.log('pages', pages, response);
             var paginationPrefix = '#my-page-';
             var $pag_wrapper = $('.pagination-container');
+            $loader.hide();
             if(pages !== $pag_wrapper.find('.owl-stage > div').length){
-                $pag_wrapper.empty();
+                $pag_wrapper.find('.pagination').remove();
                 $pag_wrapper.append('<div class="pagination"></div>');
-                for(var i = 0; i < response.count / (response.num) - 200; i++) {
-                    $pag_wrapper.find('.pagination').append('<a href="' + paginationPrefix + (i + 1) + '"' + (i == response.page ? ' class="selected"' : '') + ' data-hash="' + paginationPrefix + (i + 1) + '">' + (i + 1) + '</a>');
+                for(var i = 0; i < pages; i++) {
+                    console.log(i, response.page, i == response.page);
+                    $pag_wrapper.find('.pagination').append('<a href="' + paginationPrefix + (i + 1) + '"' + (i == response.page ? ' class="current-page"' : '') + ' data-hash="' + paginationPrefix + (i + 1) + '">' + (i + 1) + '</a>');
                 }
                 var owl = $pag_wrapper.find('.pagination');
                 owl.owlCarousel({
                     loop: false,
                     dots: false,
                     center: true,
-                    URLhashListener: true,
+                    URLhashListener: false,
                     slideBy: 3,
-                    margin: 5,
+                    // margin: 5,
                     startPosition: response.page,
                     loadedClass: 'owl-carousel owl-loaded',
+                    onInitialized: function(){
+                        $pag_wrapper.find('.pagination .owl-item a').on('click', function(){
+                            var $that = $(this),
+                                page = $that.text();
+                            $pag_wrapper.find('.pagination .owl-item a').removeClass('current-page');
+                            $that.addClass('current-page');
+                            console.log('pagination clicked', page);
+                            lastContentSendMessage.page = parseInt(page) - 1;
+                            getAudios(lastContentSendMessage);
+                            // if(count && count > 0) {
+                            //     lastContentSendMessage.count = count;
+                            //     getAudios(lastContentSendMessage);
+                            // }
+                        });
+                    },
                     responsive:{
                         0:{
-                            items:10
+                            items: 6
                         },
                         600:{
-                            items:14
+                            items: 10
                         },
                         768:{
-                            items:16
+                            items: 12
+                        },
+                        1100:{
+                            items: 16
                         },
                         1368:{
-                            items:25
-                        },
+                            items: 25
+                        }
                     }
                 });
                 owl.on('mousewheel', '.owl-stage', function (e) {
@@ -174,12 +200,12 @@ function getAudios(params, callback) {
                     e.preventDefault();
                 });
 
-                // $('.controls .fa-chevron-circle-right').on('click', function(){
-                //     owl.trigger('next.owl');
-                // });
-                // $('.controls .fa-chevron-circle-left').on('click', function(){
-                //     owl.trigger('prev.owl');
-                // });
+                $pag_wrapper.find('.left-arrow').on('click', function(){
+                    owl.trigger('prev.owl');
+                });
+                $pag_wrapper.find('.right-arrow').on('click', function(){
+                    owl.trigger('next.owl');
+                });
                 //$pag_wrapper.children().fadeOut(100);
             }
             $(window).trigger('resize');
@@ -275,7 +301,26 @@ $(document).ready(function(){
             }
             if(response.items) {
                 $.each(response.items, function(i, e){
-                    var $album = $('<a href="#" class="list-group-item album" data-id="' + e.album_id + '"><span>' + e.title + '</span><i class="fa fa-cart-arrow-down" aria-hidden="true" title="Add to Download List"></i></a>');
+                    var $album = $('<a href="#" class="list-group-item album" data-id="' + e.album_id + '"><span>' + e.title + '</span><i class="fa fa-cart-arrow-down hide" aria-hidden="true" title="Add to Download List"></i><span class="badge">14</span></a>');
+                    $album.on('click', function(){
+                        var $that = $(this),
+                            album_id = $that.data('id');
+                        $that.siblings().removeClass('active');
+                        $that.addClass('active');
+                        getAudios({
+                            album_id: album_id
+                        }, function(){
+
+                        }, 'getAlbumAudios');
+                        // sendMessage('getAlbumAudios', function(albumAudios){
+                        //     if(albumAudios.count) {
+                        //         $('.albums-count').text(albumAudios.count);
+                        //     }
+                        //     if(albumAudios.items) {
+                        //         console.log('albums', albumAudios);
+                        //     }
+                        // }, {album_id});
+                    });
                     $('.albums .list-group').append($album);
                 });
                 $(window).trigger('resize');

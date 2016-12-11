@@ -1,6 +1,8 @@
 var downloads = window.downloadQueue || [],
     default_save_dir = false,// {path, fullPath}
-    xhrs = {};
+    xhrs = {},
+    choserOpened = false,
+    downloadedSize = 0;
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     //authorizing
@@ -46,6 +48,8 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                         if($aSize.hasClass('hide')) {
                             $aSize.text(formatBytes(event.total));
                             $aSize.removeClass('hide');
+                            if(event.total) downloadedSize+=event.total;
+                            $('.downloaded-size').text(formatBytes(downloadedSize));
                         }
                     };
                 })($progress, $audioSize));
@@ -108,10 +112,33 @@ function initDownloads(callback) {
                 default_save_dir = data.default_save_dir;
                 console.log('default_save_dir', default_save_dir);
                 $('#choose_dir span').text(default_save_dir.fullPath ? default_save_dir.fullPath : default_save_dir);
+            } else {
+                $('#choose_dir span').text('Папка не выбрана');
             }
             callback();
         });
     });
+}
+function openDirectoryChoser($that) {
+    if(!choserOpened) {
+        choserOpened = true;
+        chrome.fileSystem.chooseEntry({type: 'openDirectory'}, function (theEntry) {
+            choserOpened = false;
+            if (!theEntry) {
+                $that.find('span').text('Папка не выбрана');
+                return;
+            }
+            chrome.fileSystem.getDisplayPath(theEntry, function (displayPath) {
+                var saveObject = {
+                    path: chrome.fileSystem.retainEntry(theEntry),
+                    fullPath: displayPath
+                };
+                chrome.storage.local.set({'default_save_dir': saveObject});
+                default_save_dir = saveObject;
+                $('#choose_dir span').text(displayPath);
+            });
+        });
+    }
 }
 function saveAudio(download) {
     var downloadDef = new $.Deferred();
@@ -173,7 +200,10 @@ function saveAudio(download) {
             xhrs[audioID] = xhr;
             xhr.send();
         } else downloadDef.reject('Empty url parameter');
-    } else downloadDef.reject('Empty save directory');
+    } else {
+        //openDirectoryChoser($('#choose_dir'));//todo: open folder choosing if empty
+        downloadDef.reject('Empty save directory');
+    }
     return downloadDef;
 }
 
@@ -217,6 +247,8 @@ function prependDownload(e) {
                 event.preventDefault();
             });
         })(e);
+        if(e.total) downloadedSize+=e.total;
+        $('.downloaded-size').text(formatBytes(downloadedSize));
         $('.downloads').prepend($download);
     }
 }
@@ -281,22 +313,7 @@ $(document).ready(function(){
             }
         });
         $('#choose_dir').on('click', function (e) {
-            var $that = $(this);
-            chrome.fileSystem.chooseEntry({type: 'openDirectory'}, function (theEntry) {
-                if (!theEntry) {
-                    $that.find('span').text('Папка не выбрана');
-                    return;
-                }
-                chrome.fileSystem.getDisplayPath(theEntry, function(displayPath){
-                    var saveObject = {
-                        path: chrome.fileSystem.retainEntry(theEntry),
-                        fullPath: displayPath
-                    };
-                    chrome.storage.local.set({'default_save_dir': saveObject});
-                    default_save_dir = saveObject;
-                    $('#choose_dir span').text(displayPath);
-                });
-            });
+            openDirectoryChoser($(this));
         });
         $('#maxRunningTasks').on('change', function(e){
             var $that = $(this),
