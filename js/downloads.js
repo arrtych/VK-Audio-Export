@@ -1,10 +1,11 @@
-var downloads = window.downloads || {},
+var downloads = window.downloadQueue || [],
     default_save_dir = false,// {path, fullPath}
     xhrs = {};
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     //authorizing
     var action = message.action;
+    delete message.action;
     console.log('chrome.runtime.onMessage.addListener', action, sender, message);
     if (sender.url && sender.url.indexOf('background_page.html') != -1) {
         if (action) {
@@ -13,7 +14,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                     data = message.data, $download = $;
                 console.info('runNextTask');
                 if(data.audio) {
-                    $download = $('.download-' + data.audio.id).addClass('downloading');
+                    $download = $('.download-' + data.audio.id).eq(0).addClass('downloading');
                     $progress = $download.find('.progress');
                 }
 
@@ -28,6 +29,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
                 savedAudio.done((function($down) {
                     return function(audioFile){
+                        chrome.storage.local.get('downloadQueue', function(data){
+                            if(data.downloadQueue) downloads = data.downloadQueue;
+                            $('.downloads-num').text(downloads.length);
+                        });
                         console.log('saveAudio.done', audioFile);
                         $down.removeClass('downloading').addClass('downloaded');
                         sendResponse(audioFile);
@@ -54,12 +59,9 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         }
     } else {
         if(action) {
-            // if(action == "startAudioDownload") {
-            //     var id = message.id;
-            //     if(id) {
-            //
-            //     }
-            // }
+            if(action == "startAudioDownload") {
+                prependDownload(message);
+            }
         }
     }
 });
@@ -154,46 +156,51 @@ function saveAudio(download) {
     } else downloadDef.reject('Empty save directory');
     return downloadDef;
 }
+
+function prependDownload(e) {
+    var id = e.id;
+    if(id) {
+        var downloaded = false,
+            classes = ['download', 'download-' + id];
+        // if(downloads[id] && downloads[id].finished) {
+        //     downloaded = true;
+        //     classes.push('downloaded');
+        // }
+        var $download = $('<div class="' + classes.join(" ") + '" data-id="' + e.id + '">' +
+            '<div class="middle"><h5><span class="artist">' + e.artist + '</span> - <span class="title" title="' + e.title + '">' + e.title + '</span></h5>' +
+            '</div><div class="right"><div class="checkbox">' +
+            '<input type="checkbox" value="None" id="checkbox-' + id + '" name="check" />' +
+            '<label for="checkbox-' + id + '"></label></div>' +
+            '<a href="#" class="start-pause" title="Pause Download"><i class="fa fa-pause-circle" aria-hidden="true"></i></a>' +
+            '</div>' +
+            '<div class="progress">' +
+            '<div class="progress-bar progress-bar-success" style="width: 0"></div>' +
+            '</div>' +
+            '</div>');
+        (function (e) {
+            $download.find('.start-pause').on('click', function (event) {
+                var $that = $(this);
+                saveAudio(e, $that.closest('.download'));
+                // sendMessage('startAudioDownload', function (response) {
+                //     console.log('startAudioDownload', response, e);
+                // }, e);
+                // console.log('download', href, artist, title);
+                event.preventDefault();
+            });
+        })(e);
+        $('.downloads').prepend($download);
+    }
+}
+
 $(document).ready(function(){
     initDownloads(function(success, error) {
-        var keys = Object.keys(downloads),
-            downloadsNum = keys.length;
+        var downloadsNum = downloads.length;
         $('.downloads-num').text(downloadsNum);
         // if(default_save_dir)
         if(downloadsNum > 0) {
             for (var i = 0; i < downloadsNum; i++) {
-                var key = keys[i],
-                    e = downloads[key],
-                    id = e.id,
-                    downloaded = false,
-                    classes = ['download', 'download-' + id];
-                // if(downloads[id] && downloads[id].finished) {
-                //     downloaded = true;
-                //     classes.push('downloaded');
-                // }
-                var $download = $('<div class="' + classes.join(" ") + '" data-id="' + e.id + '">' +
-                    '<div class="middle"><h5><span class="artist">' + e.artist + '</span> - <span class="title" title="' + e.title + '">' + e.title + '</span></h5>' +
-                    '</div><div class="right"><div class="checkbox">' +
-                    '<input type="checkbox" value="None" id="checkbox-' + id + '" name="check" />' +
-                    '<label for="checkbox-' + id + '"></label></div>' +
-                    '<a href="' + e.url + '" class="start-pause" title="Pause Download"><i class="fa fa-download" aria-hidden="true"></i></a>' +
-                    '</div>' +
-                    '<div class="progress">' +
-                    '<div class="progress-bar progress-bar-success" style="width: 0"></div>' +
-                    '</div>' +
-                    '</div>');
-                (function (e) {
-                    $download.find('.start-pause').on('click', function (event) {
-                        var $that = $(this);
-                        saveAudio(e, $that.closest('.download'));
-                        // sendMessage('startAudioDownload', function (response) {
-                        //     console.log('startAudioDownload', response, e);
-                        // }, e);
-                        // console.log('download', href, artist, title);
-                        event.preventDefault();
-                    });
-                })(e);
-                $('.downloads').append($download);
+                var e = downloads[i];
+                prependDownload(e);
             }
         }
         $('#pause_all').on('click', function (e) {
@@ -201,13 +208,13 @@ $(document).ready(function(){
             if(!$that.hasClass('paused')) {
                 sendMessage('pauseAllDownloads', function (answer) {
                     if (answer.paused) {
-                        $that.addClass('paused').find('span').text('Возобновить');
+                        $that.addClass('paused').find('span').text('Возобновить все');
                     }
                 });
             } else {
                 sendMessage('resumeAllDownloads', function (answer) {
                     if(!answer.paused) {
-                        $that.removeClass('paused').find('span').text('Остановить');
+                        $that.removeClass('paused').find('span').text('Остановить все');
                     }
                 });
             }

@@ -7504,8 +7504,14 @@ a.list-group-item-danger.active:focus {
   right: 82px;
   left: 20px;
 }
+.downloads-container .downloads .download .start-pause {
+  opacity: 0;
+}
 .downloads-container .downloads .download.downloading .progress {
   display: block;
+}
+.downloads-container .downloads .download.downloading .start-pause {
+  opacity: 1;
 }
 .downloads-container .downloads .download.downloaded .progress {
   display: none;

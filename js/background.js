@@ -7,7 +7,7 @@ var authTabId = null,
         'url': 'https://oauth.vk.com/authorize?client_id=' + clientID + '&redirect_uri=' + encodeURIComponent(redirectUri) + '&scope=audio&display=page&response_type=token&v=5.60',
         'interactive': true
     },
-    downloads = {},
+    downloadQueue = [],
     downloadManager = new DownloadManager();
 
 function openRequestedPopup(strUrl, strWindowName, sid, method, params) { //todo: must finish with captcha
@@ -68,9 +68,11 @@ function requestVK(method, params, callback) {
 }
 
 function initDownloads(callback) {
-    getSettings(function(downloadsData, error){
-        callback(downloadsData, error);
-    }, 'downloads');
+    chrome.storage.local.get('downloadQueue', function(data){
+        if(data.downloadQueue) downloadQueue = data.downloadQueue;
+        if(chrome.runtime.lastError) callback(false, chrome.runtime.lastError);
+        else callback(downloadQueue);
+    });
 }
 
 function downloadRemove(audio, callback) {
@@ -80,27 +82,77 @@ function downloadRemove(audio, callback) {
 function downloadPause(audio, callback) {
 
 }
-function downloadStart(audio) {
-    var loadingIntoLocal;
+
+function addAudioToDownloadList(audio, callback) {
+    var internalSave = function(audio, callback) {
+        downloadQueue.push(audio);
+        chrome.storage.local.set({downloadQueue: downloadQueue}, function () {
+            if (!chrome.runtime.lastError) callback(downloadQueue);
+            else callback(false, chrome.runtime.lastError);
+        });
+    };
+    if(downloadQueue.length == 0) {
+        chrome.storage.local.get('downloadQueue', function(data){
+            if(data.downloadQueue) downloadQueue = data.downloadQueue;
+            internalSave(audio, callback);
+        });
+    } else {
+        internalSave(audio, callback);
+    }
+}
+
+/**
+ * Adding to download queue and start if needed (second argument must be true)
+ *
+ * @param audio
+ * @param start if true, then start download after adding
+ * @returns {jQuery.Deferred}
+ */
+function downloadAdd(audio, start) {
+    var answerDef = new $.Deferred();
     if(audio.action) delete audio.action;
-    console.log('download start', audio);
-    loadingIntoLocal = downloadManager.addTask(audio);
-    // console.log('downloadStart', audio);
-    // loadingIntoLocal.done(function(blob) {
-    //     // imgNode.css({
-    //     //     backgroundImage: 'url(' + imgBlobUrl + ')'
-    //     // });
-    //     // return imgNode.html('');
-    //     console.log('download done', blob);
-    // });
-    // loadingIntoLocal.fail(function(error) {
-    //     // imgNode.css({
-    //     //     backgroundImage: 'url(' + imgBlobUrl + ')'
-    //     // });
-    //     // return imgNode.html('');
-    //     console.error('download fail', error);
-    // });
-    return loadingIntoLocal;
+    addAudioToDownloadList(audio, function(queue, error){
+        var loadingIntoLocal = start === true ? downloadManager.addTask(audio) : downloadManager.addTask(audio, null, false);
+        loadingIntoLocal.done(function(answer){
+            updateAudioInDownloadList(answer, {downloaded: true});
+            answerDef.resolve(answer);
+        });
+        loadingIntoLocal.fail(function(error){
+            answerDef.reject(error);
+        });
+    });
+    return answerDef;
+}
+
+function updateAudioInDownloadList(audio, data, callback) {
+    var foundIndex = indexOfDownloadList(audio);
+    if(foundIndex !== false) {
+        downloadQueue[foundIndex] = $.extend(downloadQueue[foundIndex], data);
+        chrome.storage.local.set({downloadQueue: downloadQueue}, function () {
+            if (!chrome.runtime.lastError) {
+                if(callback) callback(downloadQueue);
+            }
+            else {
+                if(callback) callback(false, chrome.runtime.lastError);
+            }
+        });
+    } else return false;
+}
+
+function indexOfDownloadList(data, multi) {
+    var id = false,
+        foundIndexes = [];
+    if(data.audio && data.audio.id) id = data.audio.id;
+    if(data.data && data.data.audio && data.data.audio.id) id = data.data.audio.id;
+    var foundAudio = $.grep(downloadQueue, function(e, index){
+        if(e.id && e.id === id) {
+            foundIndexes.push(index);
+            return true;
+        } else return false;
+    });
+    if(foundIndexes.length > 0) {
+        return multi === true ? foundIndexes : foundIndexes[0];
+    } else return false;
 }
 
 function setSettings(data, callback, key) {
@@ -108,11 +160,6 @@ function setSettings(data, callback, key) {
     if (data && Object.keys(data).length > 0) {
         var obj = {};
         if(key == 'vk_user_data') data = $.extend(data, storage);
-        else if(key == 'downloads') {
-            var audio = {};
-            if(data.id) audio[data.id] = data;
-            data = $.extend(audio, downloads);
-        }
         var count = Object.keys(data).length;
         obj[key] = data;
         // console.log('setting SETTING', key, obj, data);
@@ -120,9 +167,6 @@ function setSettings(data, callback, key) {
             if(key == 'vk_user_data') {
                 storage = data;
                 if(callback) callback(data);
-            } else if(key == 'downloads') {
-                downloads = data;
-                if(callback) callback(data, false, count);
             }
         });
     } else {
@@ -138,7 +182,6 @@ function getSettings(callback, key) {
         console.log('get_data', key, data);
         if(data[key] && Object.keys(data[key]).length !== 0) {
             if(key == 'vk_user_data') storage = data[key];
-            else if(key == 'downloads') downloads = data[key];
             if(callback) callback(data[key]);
         } else {
             callback(null, new Error('Empty ' + key));
@@ -204,7 +247,7 @@ function launchWelcome(launchData, vkData) {
         win.contentWindow.launchData = launchData;
     });
 }
-function launchMain(launchData, vkData, downloads) {
+function launchMain(launchData, vkData, downloadQueue) {
     chrome.app.window.create('index.html', {
         id: "mainWindow",
         innerBounds: {
@@ -215,7 +258,7 @@ function launchMain(launchData, vkData, downloads) {
     }, function (win) {
         win.contentWindow.launchData = launchData;
         win.contentWindow.vkData = vkData;
-        if(downloads) win.contentWindow.downloads = downloads;
+        if(downloadQueue) win.contentWindow.downloadQueue = downloadQueue;
     });
 }
 function logOut() {
@@ -229,7 +272,7 @@ function logOut() {
     });
 }
 function launchDownloadManager(callback, data) {
-    initDownloads(function(downloads, error){
+    initDownloads(function(downloadQueue, error){
         chrome.app.window.create('downloads.html', {
             id: "downloadsWindow",
             innerBounds: {
@@ -240,8 +283,8 @@ function launchDownloadManager(callback, data) {
             resizable: true
         }, function (win) {
             if(data) win.contentWindow.launchData = data;
-            if(downloads)  win.contentWindow.downloads = downloads;
-            if(callback) callback(downloads, error);
+            if(downloadQueue)  win.contentWindow.downloadQueue = downloadQueue;
+            if(callback) callback(downloadQueue, error);
         });
     });
 }
@@ -252,8 +295,8 @@ chrome.app.runtime.onLaunched.addListener(function(launchData) {
         if(error) {//not logged in
             launchWelcome(launchData, vkData);
         } else {
-            initDownloads(function(downloadsData, error) {
-                launchMain(launchData, vkData, downloadsData);
+            initDownloads(function(downloadQueue, error) {
+                launchMain(launchData, vkData, downloadQueue);
             });
         }
     });
@@ -268,10 +311,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                 if(error) {
                     sendResponse({error: error});
                 } else {
-                    initDownloads(function(downloadsData) {
+                    initDownloads(function(downloadQueue, error) {
                         sendResponse(vkData);
                         chrome.app.window.get('welcomeWindow').close();
-                        launchMain(false, vkData);
+                        launchMain(false, vkData, downloadQueue);
                     });
                 }
             });
@@ -318,13 +361,15 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             return true;
         } else if(action == 'addAudioDownload') {
             launchDownloadManager(function(downloads, error){
-                downloadStart(message);
+                var downloadDef = downloadAdd(message);
+                sendResponse(true);
             });
             return true;
         } else if(action == 'startAudioDownload') {
-            launchDownloadManager(function(downloads, error){
-                var downloadDef = downloadStart(message);
+            launchDownloadManager(function(down, error){
+                var downloadDef = downloadAdd(message, true);
                 downloadDef.done(function(answer){
+                    answer = $.extend(answer, {count: downloadQueue.length});
                     sendResponse(answer);
                 });
                 downloadDef.fail(function(error){

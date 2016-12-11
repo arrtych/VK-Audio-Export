@@ -5,7 +5,7 @@
         function DownloadManager() {
             this.queue = [];
             this.enRoute = [];
-            this.maxRunningTasks = 10;
+            this.maxRunningTasks = 4;
             this.curTaskNum = 0;
             this.paused = false;
         }
@@ -32,8 +32,9 @@
             });
             return message;
         };
-        DownloadManager.prototype.addTask = function(audio, downloading) {
+        DownloadManager.prototype.addTask = function(audio, downloading, run) {
             var add, task;
+            if(typeof run == "undefined") run = true;
             add = !downloading ? 'push' : 'unshift';
             if (downloading == null) {
                 downloading = new $.Deferred();
@@ -50,7 +51,7 @@
             };
             this.queue[add](task);
             // console.log('DownloadManager.prototype.addTask', task, this.queue);
-            this.runTasks();
+            if(run) this.runTasks();
             return downloading;
         };
 

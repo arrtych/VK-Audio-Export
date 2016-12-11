@@ -1,6 +1,6 @@
 var lastContentSendMessage = null,
     service, tracker,
-    downloads = window.downloads || {},
+    downloads = window.downloadQueue || [],
     vkData = window.vkData || {},
     userLabel = 'User-' + vkData.user_id;
 
@@ -53,7 +53,10 @@ function getAudios(params, callback) {
                     id = e.owner_id + "_" + e.id,
                     downloaded = false,
                     classes = ['audio', 'audio-' + id];
-                if(downloads[id] && downloads[id].finished) {
+                var foundAudio = $.grep(downloads, function(e){
+                    return e.id && e.id === id;
+                });
+                if(foundAudio.length > 0 && foundAudio[0].downloaded) {
                     downloaded = true;
                     classes.push('downloaded');
                 }
@@ -113,6 +116,10 @@ function getAudios(params, callback) {
                             title: title,
                             artist: artist
                         });
+                        e.preventDefault();
+                    });
+                } else {
+                    $audio.find('.download').on('click', function (e) {
                         e.preventDefault();
                     });
                 }

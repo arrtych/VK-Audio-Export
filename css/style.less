@@ -319,9 +319,15 @@
         right: 82px;
         left: 20px;
       }
+      .start-pause {
+        opacity: 0;
+      }
       &.downloading {
         .progress {
           display: block;
+        }
+        .start-pause {
+          opacity: 1;
         }
       }
       &.downloaded {
