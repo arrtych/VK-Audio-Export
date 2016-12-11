@@ -7407,20 +7407,31 @@ a.list-group-item-danger.active:focus {
   text-align: center;
   margin: 0 auto;
 }
-.downloads-container #pause_all {
+#alert-modal .modal-dialog {
+  top: 50%;
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  margin-top: -144px;
+}
+#alert-modal .modal-dialog .modal-body p {
+  font-size: 18px;
+  margin: 0;
+}
+.downloads-container #action_all {
   float: right;
   position: relative;
   top: 6px;
   margin-right: 15px;
 }
-.downloads-container #pause_all span {
+.downloads-container #action_all a:not(.dropdown-toggle) span {
   padding-left: 8px;
 }
-.downloads-container #pause_all.paused {
+.downloads-container #action_all.paused .btn {
   background-color: #28B62C;
   border-color: #23a127;
 }
-.downloads-container #pause_all.paused i:before {
+.downloads-container #action_all.paused i:before {
   content: "\f019";
 }
 .downloads-container #choose_dir {
@@ -7437,14 +7448,36 @@ a.list-group-item-danger.active:focus {
 .downloads-container #choose_dir span {
   padding-right: 7px;
 }
+.downloads-container .header {
+  border-bottom: 1px solid #dcdcdc;
+  padding: 10px 3px 10px 6px;
+}
 .downloads-container .footer {
   position: absolute;
   bottom: 15px;
-  left: 0;
-  right: 0;
+  left: 6px;
+  right: 15px;
+}
+.downloads-container .footer .left-footer {
+  margin: 0;
+  position: relative;
+  top: 7px;
+}
+.downloads-container .footer .helper {
+  position: relative;
+  left: -20px;
+  top: 3px;
+  cursor: pointer;
 }
 .downloads-container .checkbox-all {
   margin-right: 20px;
+}
+.downloads-container .downloads {
+  min-height: 530px;
+  float: left;
+  width: 100%;
+  overflow-y: scroll;
+  border-bottom: 1px solid #dcdcdc;
 }
 .downloads-container .downloads .download {
   border: 1px solid #e7e7e7;
@@ -7481,6 +7514,7 @@ a.list-group-item-danger.active:focus {
 }
 .downloads-container .downloads .download .right {
   float: right;
+  min-height: 23px;
 }
 .downloads-container .downloads .download .right .start-pause i {
   font-size: 21px;
@@ -7495,6 +7529,14 @@ a.list-group-item-danger.active:focus {
   display: block;
   margin-top: 14px;
 }
+.downloads-container .downloads .download .right .label {
+  -webkit-transition: all 0.4s;
+  -o-transition: all 0.4s;
+  transition: all 0.4s;
+  margin-right: 3px;
+  position: relative;
+  top: -1px;
+}
 .downloads-container .downloads .download .progress {
   display: none;
   position: absolute;
@@ -7505,16 +7547,30 @@ a.list-group-item-danger.active:focus {
   left: 20px;
 }
 .downloads-container .downloads .download .start-pause {
-  opacity: 0;
+  display: none;
 }
 .downloads-container .downloads .download.downloading .progress {
   display: block;
 }
 .downloads-container .downloads .download.downloading .start-pause {
-  opacity: 1;
+  display: inline;
+  top: -1px;
+}
+.downloads-container .downloads .download.downloading .label {
+  margin-right: 8px;
+}
+.downloads-container .downloads .download.downloading .start-pause {
+  position: relative;
+  right: -3px;
 }
 .downloads-container .downloads .download.downloaded .progress {
   display: none;
+}
+.downloads-container .downloads .download.paused {
+  background: rgba(255, 214, 0, 0.08);
+}
+.downloads-container .downloads .download.paused .start-pause i:before {
+  content: "\f144";
 }
 .audios-container .audios .audio {
   border: 1px solid #e7e7e7;

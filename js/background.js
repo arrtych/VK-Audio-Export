@@ -114,7 +114,10 @@ function downloadAdd(audio, start) {
     addAudioToDownloadList(audio, function(queue, error){
         var loadingIntoLocal = start === true ? downloadManager.addTask(audio) : downloadManager.addTask(audio, null, false);
         loadingIntoLocal.done(function(answer){
-            updateAudioInDownloadList(answer, {downloaded: true});
+            updateAudioInDownloadList(answer, {
+                downloaded: true,
+                total: answer.total //adding data after download
+            });
             answerDef.resolve(answer);
         });
         loadingIntoLocal.fail(function(error){
@@ -304,6 +307,7 @@ chrome.app.runtime.onLaunched.addListener(function(launchData) {
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     //authorizing
     var action = message.action;
+    delete message.action;
     if(action) {
         console.log('message', message, 'sender', sender, 'sendResponse', sendResponse);
         if(action == 'authorize') {
@@ -389,6 +393,30 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                 array: downloadManager.resumeAll(),
                 paused: downloadManager.paused
             });
+            return true;
+        } else if(action == 'clearAllDownloads') {
+            downloadQueue = [];
+            chrome.storage.local.set({downloadQueue: downloadQueue}, function () {
+                sendResponse({cleared: true});
+            });
+            return true;
+        } else if(action == 'pauseAudioDownload') {
+            downloadManager.pause(message);
+            sendResponse({paused: true});
+            return true;
+        } else if(action == 'resumeAudioDownload') {
+            downloadManager.resume(message);
+            sendResponse({paused: false});
+            return true;
+        } else if(action == 'changeMaxRunningTasks') {
+            console.log('maxRunningTasksChange', message);
+            if(message.value) {
+                message.value = parseInt(message.value);
+                chrome.storage.local.set({maxRunningTasks: message.value}, function () {
+                    $(window).trigger('maxRunningTasksChange', message.value);
+                    sendResponse({changed: true});
+                });
+            }
             return true;
         }
 

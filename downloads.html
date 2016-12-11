@@ -19,21 +19,47 @@
                             <input type="checkbox" value="" id="select-all" name="check" />
                             <label for="select-all"></label>
                         </div>
-                        <div class="btn-group">
-                            <a href="#" class="btn btn-danger btn-xs"><i class="fa fa-stop" aria-hidden="true"></i><span>Остановить все</span></a>
+                        <div id="action_all" class="btn-group">
+                            <a href="#" class="btn btn-danger btn-xs btn-action" data-action="stop"><i class="fa fa-stop" aria-hidden="true"></i><span>Остановить все</span></a>
                             <a href="#" class="btn btn-danger btn-xs dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><span class="caret"></span></a>
                             <ul class="dropdown-menu">
-                                <li><a href="#"><i class="fa fa-trash-o" aria-hidden="true"></i><span>Очистить все</span></a></li>
+                                <li><a href="#" data-action="clear"><i class="fa fa-trash-o" aria-hidden="true"></i><span>Очистить все</span></a></li>
                             </ul>
                         </div>
                     </div>
                 </div>
-                <div class="downloads"></div>
             </div>
+            <div class="downloads"></div>
         </div>
         <div class="footer row">
-            <div class="col-xs-12">
-                <a href="#" class="btn btn-primary" id="choose_dir" title="Выберите папку для сохранения"><span>Выбрать папку</span><i class="fa fa-folder-open-o" aria-hidden="true"></i></a>
+            <div class="col-xs-7">
+                <div class="form-group form-group-sm left-footer">
+                    <div class="col-xs-4 col-sm-2 col-lg-2">
+                        <input id="maxRunningTasks" type="number" class="form-control" value="4" min="2" max="20"/>
+                    </div>
+                    <div class="col-xs-8"><i class="fa fa-question-circle helper" data-toggle="tooltip" data-placement="top" title="Количество одновременных закачек" aria-hidden="true"></i></div>
+                </div>
+            </div>
+            <div class="col-xs-5">
+                <a href="#" class="btn btn-primary" id="choose_dir" data-toggle="tooltip" data-placement="top" title="Выберите папку для сохранения"><span>Выбрать папку</span><i class="fa fa-folder-open-o" aria-hidden="true"></i></a>
+            </div>
+        </div>
+    </div>
+    <div id="alert-modal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="exampleModalLabel">Вы уверены?</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите очистить весь ваш список закачек?</p>
+                    <em class="text-muted">* Загруженые файлы не будут удалены</em>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Нет</button>
+                    <button type="button" class="btn btn-primary btn-yes">Да</button>
+                </div>
             </div>
         </div>
     </div>

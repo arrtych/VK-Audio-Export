@@ -214,7 +214,7 @@ $(document).ready(function(){
     if(downloads) $('.downloads-count').text(Object.keys(downloads).length);
     $('.logout').on('click', function(e){
         sendMessage('logout', function(response){
-
+            tracker.sendEvent(userLabel, 'logout');
         });
         e.preventDefault();
     });
@@ -229,6 +229,7 @@ $(document).ready(function(){
         $that.find('.loading').removeClass('hide').addClass('show');
         $that.find('.vk-logo').css('opacity', 0);
         sendMessage('authorize', function(response){
+            tracker.sendEvent('User', 'authorize', response.user_id);
             if(!response.error) {//logged in
                 $that.find('.loading').removeClass('show').addClass('hide');
                 $that.find('.vk-logo').css('opacity', 1);

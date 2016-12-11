@@ -11,11 +11,12 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         if (action) {
             if(action == 'runNextTask') {
                 var savedAudio = saveAudio(message.data),
-                    data = message.data, $download = $;
+                    data = message.data, $download = $, $audioSize = $, $progress = $;
                 console.info('runNextTask');
                 if(data.audio) {
                     $download = $('.download-' + data.audio.id).eq(0).addClass('downloading');
                     $progress = $download.find('.progress');
+                    $audioSize = $progress.parent().find('.audio-size');
                 }
 
                 savedAudio.fail((function($down) {
@@ -39,12 +40,15 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                     };
                 })($download));
 
-                savedAudio.progress((function($prog) {
-                    return function(percentComplete) {
+                savedAudio.progress((function($prog, $aSize) {
+                    return function(percentComplete, event) {
                         $prog.children().css('width', percentComplete + "%");
-                        console.log('messageSending.progress', percentComplete);
+                        if($aSize.hasClass('hide')) {
+                            $aSize.text(formatBytes(event.total));
+                            $aSize.removeClass('hide');
+                        }
                     };
-                })($progress));
+                })($progress, $audioSize));
                 return true;
             } else if(action == 'pauseDownloadingTask') {
                 var data = message.data,
@@ -66,13 +70,20 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     }
 });
 
+function formatBytes(bytes) {
+    if(bytes < 1024) return bytes + " Bytes";
+    else if(bytes < 1048576) return(bytes / 1024).toFixed(1) + " KB";
+    else if(bytes < 1073741824) return(bytes / 1048576).toFixed(1) + " MB";
+    else return(bytes / 1073741824).toFixed(1) + " GB";
+};
 
 function sendMessage(action, callback, data) {
     if(action) {
         var msg = {
             action: action
         };
-        if(data) {
+        // console.log('sendMessage', data);
+        if(data && Object.keys(data).length > 0) {
             for(property in data) {
                 msg[property] = data[property];
             }
@@ -85,13 +96,21 @@ function sendMessage(action, callback, data) {
     }
 }
 function initDownloads(callback) {
-    chrome.storage.local.get('default_save_dir', function (data) {
-        if(data && data.default_save_dir) {
-            default_save_dir = data.default_save_dir;
-            console.log('default_save_dir', default_save_dir);
-            $('#choose_dir span').text(default_save_dir.fullPath ? default_save_dir.fullPath : default_save_dir);
+    chrome.storage.local.get('maxRunningTasks', function(data){
+        if(data.maxRunningTasks) {
+            $('#maxRunningTasks').val(data.maxRunningTasks);
         }
-        callback();
+    });
+    chrome.storage.local.get('downloadQueue', function(data){
+        if(data.downloadQueue) downloads = data.downloadQueue;
+        chrome.storage.local.get('default_save_dir', function (data) {
+            if(data && data.default_save_dir) {
+                default_save_dir = data.default_save_dir;
+                console.log('default_save_dir', default_save_dir);
+                $('#choose_dir span').text(default_save_dir.fullPath ? default_save_dir.fullPath : default_save_dir);
+            }
+            callback();
+        });
     });
 }
 function saveAudio(download) {
@@ -105,7 +124,7 @@ function saveAudio(download) {
             xhr.onprogress = function (event) {
                 if (event.lengthComputable) {
                     var percentComplete = Math.round(event.loaded / event.total * 100);
-                    return downloadDef.notify(percentComplete);
+                    return downloadDef.notify(percentComplete, event);
                 }
             };
             xhr.onerror = function(e){
@@ -136,10 +155,11 @@ function saveAudio(download) {
                                     downloadDef.reject(e);
                                 };
                                 writer.onwriteend = function (e) {
-                                    console.info('file.ready');
+                                    console.info('file.ready', e);
                                     downloadDef.resolve({
                                         name: fileEntry.name,
                                         data: download,
+                                        total: e.total,
                                         fullPath: fileEntry.fullPath
                                     });
                                     // e.currentTarget.truncate(e.currentTarget.position);
@@ -168,7 +188,7 @@ function prependDownload(e) {
         // }
         var $download = $('<div class="' + classes.join(" ") + '" data-id="' + e.id + '">' +
             '<div class="middle"><h5><span class="artist">' + e.artist + '</span> - <span class="title" title="' + e.title + '">' + e.title + '</span></h5>' +
-            '</div><div class="right"><div class="checkbox">' +
+            '</div><div class="right"><span class="label label-default audio-size' + (e.total ? '' : ' hide') + '">' + formatBytes(e.total) + '</span><div class="checkbox">' +
             '<input type="checkbox" value="None" id="checkbox-' + id + '" name="check" />' +
             '<label for="checkbox-' + id + '"></label></div>' +
             '<a href="#" class="start-pause" title="Pause Download"><i class="fa fa-pause-circle" aria-hidden="true"></i></a>' +
@@ -180,11 +200,20 @@ function prependDownload(e) {
         (function (e) {
             $download.find('.start-pause').on('click', function (event) {
                 var $that = $(this);
-                saveAudio(e, $that.closest('.download'));
-                // sendMessage('startAudioDownload', function (response) {
-                //     console.log('startAudioDownload', response, e);
-                // }, e);
-                // console.log('download', href, artist, title);
+                if(!$download.hasClass('paused')) {
+                    sendMessage('pauseAudioDownload', function (answer) {
+                        $download.addClass('paused');
+                    }, e);
+                } else {
+                    sendMessage('resumeAudioDownload', function (answer) {
+                        $download.removeClass('paused');
+                        // if (!answer.paused) {
+                        //     $parent.removeClass('paused');
+                        //     $that.find('span').text('Остановить все');
+                        // }
+                        console.log('paused audio', answer);
+                    }, e);
+                }
                 event.preventDefault();
             });
         })(e);
@@ -203,19 +232,51 @@ $(document).ready(function(){
                 prependDownload(e);
             }
         }
-        $('#pause_all').on('click', function (e) {
-            var $that = $(this);
-            if(!$that.hasClass('paused')) {
-                sendMessage('pauseAllDownloads', function (answer) {
-                    if (answer.paused) {
-                        $that.addClass('paused').find('span').text('Возобновить все');
-                    }
-                });
+        var $actionsAll = $('#action_all');
+        $actionsAll.find('.dropdown-menu a').on('click', function (e) {
+            var $that = $(this),
+                thatAction = $that.data('action'),
+                thatHTML = $that.html(),
+                $btn = $actionsAll.find('.btn-action');
+                clickAction = $btn.data('action'),
+                clickHTML = $btn.html();
+            $btn.html(thatHTML);
+            $that.html(clickHTML);
+            $btn.data('action', thatAction);
+            $that.data('action', clickAction);
+            $btn.click();
+        });
+        $actionsAll.find('.btn-action').on('click', function (e) {
+            var $that = $(this),
+                $parent = $that.parent(),
+                action = $that.data('action');
+            console.log('clicked', action);
+            if(action == 'stop') {
+                if (!$parent.hasClass('paused')) {
+                    sendMessage('pauseAllDownloads', function (answer) {
+                        if (answer.paused) {
+                            $parent.addClass('paused');
+                            $that.find('span').text('Возобновить все');
+                        }
+                    });
+                } else {
+                    sendMessage('resumeAllDownloads', function (answer) {
+                        if (!answer.paused) {
+                            $parent.removeClass('paused');
+                            $that.find('span').text('Остановить все');
+                        }
+                    });
+                }
             } else {
-                sendMessage('resumeAllDownloads', function (answer) {
-                    if(!answer.paused) {
-                        $that.removeClass('paused').find('span').text('Остановить все');
-                    }
+                //accept clear list
+                var $modal = $('#alert-modal');
+                $modal.modal('show');
+                $modal.find('.btn-yes').on('click', function(){
+                    sendMessage('clearAllDownloads', function (answer) {
+                        $('.downloads').empty();
+                        $('.downloads-num').text(0);
+                        $modal.modal('hide');
+                    });
                 });
             }
         });
@@ -237,5 +298,21 @@ $(document).ready(function(){
                 });
             });
         });
+        $('#maxRunningTasks').on('change', function(e){
+            var $that = $(this),
+                val = $that.val();
+            console.log(val);
+            sendMessage('changeMaxRunningTasks', function (answer) {
+                console.log(answer);
+            }, {value: val});
+        });
+        $(window).on('resize', function(){
+            var windowHeight = $(window).height(),
+                footerHeight = $('.footer').outerHeight(),
+                headerHeight = $('.header').parent().outerHeight();
+            $('.downloads').height(windowHeight - footerHeight - headerHeight - 20);
+        });
+        $(window).trigger('resize');
+        $('[data-toggle="tooltip"]').tooltip();
     });
 });

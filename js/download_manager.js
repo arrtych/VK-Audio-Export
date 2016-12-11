@@ -8,6 +8,18 @@
             this.maxRunningTasks = 4;
             this.curTaskNum = 0;
             this.paused = false;
+            (function(_this){
+                chrome.storage.local.get('maxRunningTasks', function (data) {
+                    if(data.maxRunningTasks) _this.maxRunningTasks = data.maxRunningTasks;
+                });
+            })(this);
+            (function(_this){
+                $(window).on('maxRunningTasksChange', function(e, data){
+                    _this.maxRunningTasks = parseInt(data);
+                    // _this.runTasks();
+                    // console.log('maxRunningTasksChange', _this, data);
+                });
+            })(this);
         }
 
         DownloadManager.prototype.sendMessage = function(action, data) {
@@ -40,7 +52,7 @@
                 downloading = new $.Deferred();
             }
             var url = audio && audio.url ? audio.url : '';
-            delete audio.url;
+            // delete audio.url;
             if(audio.hasOwnProperty('audio')) audio = audio.audio;
             task = {
                 audio: audio,
@@ -96,6 +108,27 @@
             return messageSending;
         };
 
+        DownloadManager.prototype.getAudio = function(audio) {
+            var id = false;
+            if(audio.audio && audio.audio.id) id = audio.audio.id;
+            if(audio.id) id = audio.id;
+            var foundAudio = $.grep(this.enRoute, function(e){
+                return e.id == id || (e.audio && id == e.audio.id);
+            });
+            if(foundAudio.length > 0) {
+                return foundAudio;
+            } else return false;
+        };
+        DownloadManager.prototype.pause = function(audio) {
+            var foundAudio = this.getAudio(audio);
+            if(foundAudio.length > 0) {
+                var downloadingTask = this.sendMessage('pauseDownloadingTask', foundAudio[0]);
+                downloadingTask.done(function(audio){
+                    console.log('paused downloading', audio);
+                });
+                // this.addTask(task, task.promise);
+            }
+        };
         DownloadManager.prototype.pauseAll = function() {
             var task, _results;
             this.paused = true;
@@ -115,6 +148,15 @@
         DownloadManager.prototype.resumeAll = function() {
             this.paused = false;
             return this.runTasks();
+        };
+
+        DownloadManager.prototype.resume = function(audio) {
+            var foundAudio = this.getAudio(audio);
+            console.log('DownloadManager.prototype.resume', foundAudio[0]);
+            if(foundAudio.length > 0) {
+                this.addTask(foundAudio[0], foundAudio[0].promise);
+                return this.runTasks();
+            }
         };
 
         window.DownloadManager = DownloadManager;
