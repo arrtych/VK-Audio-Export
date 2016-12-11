@@ -214,18 +214,43 @@
   }
 }
 .downloads-container {
+  #pause_all {
+    float: right;
+    position: relative;
+    top: 6px;
+    margin-right: 15px;
+    span {
+      padding-left: 8px;
+    }
+    &.paused {
+      background-color: #28B62C;
+      border-color: #23a127;
+      i {
+        &:before {
+          content: "\f019";
+        }
+      }
+    }
+  }
   #choose_dir {
     float: right;
     margin-right: 10px;
     padding: 6px 8px 3px;
     position: relative;
     top: 5px;
+    text-transform: none;
     i {
       font-size: 12px;
     }
     span {
       padding-right: 7px;
     }
+  }
+  .footer {
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    right: 0;
   }
   .checkbox-all {
     margin-right: 20px;
@@ -286,12 +311,23 @@
         }
       }
       .progress {
+        display: none;
         position: absolute;
         margin: 0;
         height: 4px;
         bottom: 5px;
         right: 82px;
         left: 20px;
+      }
+      &.downloading {
+        .progress {
+          display: block;
+        }
+      }
+      &.downloaded {
+        .progress {
+          display: none;
+        }
       }
     }
   }

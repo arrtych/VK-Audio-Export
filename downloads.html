@@ -7,22 +7,27 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="container-fluid container-main">
+    <div class="container-fluid downloads-container">
         <div class="row">
-            <div class="col-xs-12 downloads-container">
+            <div class="col-xs-12">
                 <div class="header row">
-                    <div class="col-sm-6 col-xs-6">
-                        <h4>Загрузки (<span class="downloads-num">?</span>)<span class="loading"><i class="fa fa-circle-o-notch fa-spin fa-fw"></i><span class="sr-only">Loading...</span></span></h4>
+                    <div class="col-sm-4 col-xs-4">
+                        <h4>Загрузки (<span class="downloads-num">?</span>)</h4>
                     </div>
-                    <div class="col-sm-6 col-xs-6">
+                    <div class="col-sm-8 col-xs-8">
                         <div class="checkbox checkbox-all">
                             <input type="checkbox" value="" id="select-all" name="check" />
                             <label for="select-all"></label>
                         </div>
-                        <a href="#" class="btn btn-primary" id="choose_dir"><span>Выбрать папку</span><i class="fa fa-folder-open-o" aria-hidden="true"></i></a>
+                        <a href="#" class="btn btn-danger btn-xs" id="pause_all"><i class="fa fa-stop" aria-hidden="true"></i><span>Остановить</span></a>
                     </div>
                 </div>
                 <div class="downloads"></div>
+            </div>
+        </div>
+        <div class="footer row">
+            <div class="col-xs-12">
+                <a href="#" class="btn btn-primary" id="choose_dir" title="Выберите папку для сохранения"><span>Выбрать папку</span><i class="fa fa-folder-open-o" aria-hidden="true"></i></a>
             </div>
         </div>
     </div>

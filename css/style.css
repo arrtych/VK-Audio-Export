@@ -7407,18 +7407,41 @@ a.list-group-item-danger.active:focus {
   text-align: center;
   margin: 0 auto;
 }
+.downloads-container #pause_all {
+  float: right;
+  position: relative;
+  top: 6px;
+  margin-right: 15px;
+}
+.downloads-container #pause_all span {
+  padding-left: 8px;
+}
+.downloads-container #pause_all.paused {
+  background-color: #28B62C;
+  border-color: #23a127;
+}
+.downloads-container #pause_all.paused i:before {
+  content: "\f019";
+}
 .downloads-container #choose_dir {
   float: right;
   margin-right: 10px;
   padding: 6px 8px 3px;
   position: relative;
   top: 5px;
+  text-transform: none;
 }
 .downloads-container #choose_dir i {
   font-size: 12px;
 }
 .downloads-container #choose_dir span {
   padding-right: 7px;
+}
+.downloads-container .footer {
+  position: absolute;
+  bottom: 15px;
+  left: 0;
+  right: 0;
 }
 .downloads-container .checkbox-all {
   margin-right: 20px;
@@ -7473,12 +7496,19 @@ a.list-group-item-danger.active:focus {
   margin-top: 14px;
 }
 .downloads-container .downloads .download .progress {
+  display: none;
   position: absolute;
   margin: 0;
   height: 4px;
   bottom: 5px;
   right: 82px;
   left: 20px;
+}
+.downloads-container .downloads .download.downloading .progress {
+  display: block;
+}
+.downloads-container .downloads .download.downloaded .progress {
+  display: none;
 }
 .audios-container .audios .audio {
   border: 1px solid #e7e7e7;

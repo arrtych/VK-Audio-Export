@@ -1,5 +1,6 @@
 var downloads = window.downloads || {},
-    default_save_dir = false;
+    default_save_dir = false,// {path, fullPath}
+    xhrs = {};
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     //authorizing
@@ -8,22 +9,57 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (sender.url && sender.url.indexOf('background_page.html') != -1) {
         if (action) {
             if(action == 'runNextTask') {
-                var savedAudio = saveAudio(message.data);
-                savedAudio.fail(function(e){
-                    console.log('saveAudio.fail', e);
-                    sendResponse({
-                        error: e
-                    });
-                });
-                savedAudio.done(function(audioFile){
-                    console.log('saveAudio.done', audioFile);
-                    sendResponse(audioFile);
-                });
-                savedAudio.progress(function(percentComplete) {
-                    console.log('messageSending.progress', percentComplete);
-                });
+                var savedAudio = saveAudio(message.data),
+                    data = message.data, $download = $;
+                console.info('runNextTask');
+                if(data.audio) {
+                    $download = $('.download-' + data.audio.id).addClass('downloading');
+                    $progress = $download.find('.progress');
+                }
+
+                savedAudio.fail((function($down) {
+                    return function(e){
+                        console.log('saveAudio.fail', e);
+                        sendResponse({
+                            error: e
+                        });
+                    };
+                })($download));
+
+                savedAudio.done((function($down) {
+                    return function(audioFile){
+                        console.log('saveAudio.done', audioFile);
+                        $down.removeClass('downloading').addClass('downloaded');
+                        sendResponse(audioFile);
+                    };
+                })($download));
+
+                savedAudio.progress((function($prog) {
+                    return function(percentComplete) {
+                        $prog.children().css('width', percentComplete + "%");
+                        console.log('messageSending.progress', percentComplete);
+                    };
+                })($progress));
+                return true;
+            } else if(action == 'pauseDownloadingTask') {
+                var data = message.data,
+                    audioID = data.audio && data.audio.id ? data.audio.id : false,
+                    xhr = xhrs[audioID];
+                if(xhr) {
+                    xhr.abort();
+                    sendResponse(true);
+                } else sendResponse({error: 'XHR not found'});
                 return true;
             }
+        }
+    } else {
+        if(action) {
+            // if(action == "startAudioDownload") {
+            //     var id = message.id;
+            //     if(id) {
+            //
+            //     }
+            // }
         }
     }
 });
@@ -48,7 +84,11 @@ function sendMessage(action, callback, data) {
 }
 function initDownloads(callback) {
     chrome.storage.local.get('default_save_dir', function (data) {
-        if(data && data.default_save_dir) default_save_dir = data.default_save_dir;
+        if(data && data.default_save_dir) {
+            default_save_dir = data.default_save_dir;
+            console.log('default_save_dir', default_save_dir);
+            $('#choose_dir span').text(default_save_dir.fullPath ? default_save_dir.fullPath : default_save_dir);
+        }
         callback();
     });
 }
@@ -56,7 +96,8 @@ function saveAudio(download) {
     var downloadDef = new $.Deferred();
     if(default_save_dir) {
         if(download.url) {
-            var xhr = new XMLHttpRequest();
+            var xhr = new XMLHttpRequest(),
+                audioID = download.audio.id;
             xhr.open("GET", download.url);
             xhr.responseType = "blob";
             xhr.onprogress = function (event) {
@@ -66,14 +107,16 @@ function saveAudio(download) {
                 }
             };
             xhr.onerror = function(e){
+                delete xhrs[audioID];
                 downloadDef.reject(e);
             };
             xhr.onload = function (event) {
                 var blob = xhr.response;
-                chrome.fileSystem.restoreEntry(default_save_dir, function (restoredEntry) {
+                delete xhrs[audioID];
+                chrome.fileSystem.restoreEntry(default_save_dir.path, function (restoredEntry) {
                     console.log('restoredEntry', restoredEntry);
                     chrome.fileSystem.getWritableEntry(restoredEntry, function (writeEntry) {
-                        console.log('writeEntry', writeEntry);
+                        console.log('writeEntry', writeEntry, download);
                         var artist = download.audio &&  download.audio.artist ? download.audio.artist : 'VA Artist',
                             title = download.audio && download.audio.title ? download.audio.title : 'Unnamed';
                         writeEntry.getFile(artist + " - " + title + '.mp3', {
@@ -105,6 +148,7 @@ function saveAudio(download) {
                     });
                 });
             };
+            xhrs[audioID] = xhr;
             xhr.send();
         } else downloadDef.reject('Empty url parameter');
     } else downloadDef.reject('Empty save directory');
@@ -120,22 +164,27 @@ $(document).ready(function(){
             for (var i = 0; i < downloadsNum; i++) {
                 var key = keys[i],
                     e = downloads[key],
-                    id = e.owner_id + "_" + e.id;
-                var $download = $('<div class="download" data-id="' + e.id + '">' +
+                    id = e.id,
+                    downloaded = false,
+                    classes = ['download', 'download-' + id];
+                // if(downloads[id] && downloads[id].finished) {
+                //     downloaded = true;
+                //     classes.push('downloaded');
+                // }
+                var $download = $('<div class="' + classes.join(" ") + '" data-id="' + e.id + '">' +
                     '<div class="middle"><h5><span class="artist">' + e.artist + '</span> - <span class="title" title="' + e.title + '">' + e.title + '</span></h5>' +
                     '</div><div class="right"><div class="checkbox">' +
                     '<input type="checkbox" value="None" id="checkbox-' + id + '" name="check" />' +
                     '<label for="checkbox-' + id + '"></label></div>' +
                     '<a href="' + e.url + '" class="start-pause" title="Pause Download"><i class="fa fa-download" aria-hidden="true"></i></a>' +
                     '</div>' +
-                    '<div class="progress hide">' +
+                    '<div class="progress">' +
                     '<div class="progress-bar progress-bar-success" style="width: 0"></div>' +
                     '</div>' +
                     '</div>');
                 (function (e) {
                     $download.find('.start-pause').on('click', function (event) {
                         var $that = $(this);
-                        console.log('startAudioDownload', event, e);
                         saveAudio(e, $that.closest('.download'));
                         // sendMessage('startAudioDownload', function (response) {
                         //     console.log('startAudioDownload', response, e);
@@ -147,6 +196,22 @@ $(document).ready(function(){
                 $('.downloads').append($download);
             }
         }
+        $('#pause_all').on('click', function (e) {
+            var $that = $(this);
+            if(!$that.hasClass('paused')) {
+                sendMessage('pauseAllDownloads', function (answer) {
+                    if (answer.paused) {
+                        $that.addClass('paused').find('span').text('Возобновить');
+                    }
+                });
+            } else {
+                sendMessage('resumeAllDownloads', function (answer) {
+                    if(!answer.paused) {
+                        $that.removeClass('paused').find('span').text('Остановить');
+                    }
+                });
+            }
+        });
         $('#choose_dir').on('click', function (e) {
             var $that = $(this);
             chrome.fileSystem.chooseEntry({type: 'openDirectory'}, function (theEntry) {
@@ -154,11 +219,15 @@ $(document).ready(function(){
                     $that.find('span').text('Папка не выбрана');
                     return;
                 }
-                // use local storage to retain access to this file
-                chrome.storage.local.set({'default_save_dir': chrome.fileSystem.retainEntry(theEntry)});
-                if (theEntry.isDirectory) {
-                    console.log(theEntry);
-                }
+                chrome.fileSystem.getDisplayPath(theEntry, function(displayPath){
+                    var saveObject = {
+                        path: chrome.fileSystem.retainEntry(theEntry),
+                        fullPath: displayPath
+                    };
+                    chrome.storage.local.set({'default_save_dir': saveObject});
+                    default_save_dir = saveObject;
+                    $('#choose_dir span').text(displayPath);
+                });
             });
         });
     });

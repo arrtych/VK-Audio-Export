@@ -83,6 +83,7 @@ function downloadPause(audio, callback) {
 function downloadStart(audio) {
     var loadingIntoLocal;
     if(audio.action) delete audio.action;
+    console.log('download start', audio);
     loadingIntoLocal = downloadManager.addTask(audio);
     // console.log('downloadStart', audio);
     // loadingIntoLocal.done(function(blob) {
@@ -320,8 +321,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                 downloadStart(message);
             });
             return true;
-        }
-        else if(action == 'startAudioDownload') {
+        } else if(action == 'startAudioDownload') {
             launchDownloadManager(function(downloads, error){
                 var downloadDef = downloadStart(message);
                 downloadDef.done(function(answer){
@@ -331,6 +331,18 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                     console.error('downloadDef', error);
                     sendResponse({error: error});
                 });
+            });
+            return true;
+        } else if(action == 'pauseAllDownloads') {
+            sendResponse({
+                array: downloadManager.pauseAll(),
+                paused: downloadManager.paused
+            });
+            return true;
+        } else if(action == 'resumeAllDownloads') {
+            sendResponse({
+                array: downloadManager.resumeAll(),
+                paused: downloadManager.paused
             });
             return true;
         }

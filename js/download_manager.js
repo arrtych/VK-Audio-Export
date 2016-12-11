@@ -5,7 +5,7 @@
         function DownloadManager() {
             this.queue = [];
             this.enRoute = [];
-            this.maxRunningTasks = 3;
+            this.maxRunningTasks = 10;
             this.curTaskNum = 0;
             this.paused = false;
         }
@@ -40,6 +40,7 @@
             }
             var url = audio && audio.url ? audio.url : '';
             delete audio.url;
+            if(audio.hasOwnProperty('audio')) audio = audio.audio;
             task = {
                 audio: audio,
                 xhr: null,
@@ -48,7 +49,7 @@
                 numRetries: 0
             };
             this.queue[add](task);
-            console.log('DownloadManager.prototype.addTask', task, this.queue);
+            // console.log('DownloadManager.prototype.addTask', task, this.queue);
             this.runTasks();
             return downloading;
         };
@@ -85,29 +86,32 @@
             })(this));
             messageSending.fail((function(_this) {
                 return function(error, promise) {
-                    promise.reject(task);
-                    // if (task.numRetries < 3) {
-                    //     return _this.addTask(task);
-                    // }
+                    // promise.reject(task);
+                    if (task.numRetries < 3) {
+                        return _this.addTask(task, promise);
+                    }
                 };
             })(this));
             return messageSending;
         };
 
-        DownloadManager.prototype.pause = function() {
+        DownloadManager.prototype.pauseAll = function() {
             var task, _results;
             this.paused = true;
             _results = [];
             while (this.enRoute.length !== 0) {
                 task = this.enRoute.shift();
-                task.xhr.abort();
+                var downloadingTask = this.sendMessage('pauseDownloadingTask', task);
+                downloadingTask.done(function(audio){
+                    console.log('paused downloading', audio);
+                });
                 this.addTask(task, task.promise);
                 _results.push(this.curTaskNum--);
             }
             return _results;
         };
 
-        DownloadManager.prototype.resume = function() {
+        DownloadManager.prototype.resumeAll = function() {
             this.paused = false;
             return this.runTasks();
         };
