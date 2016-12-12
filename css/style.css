@@ -13,14 +13,14 @@
 .navbar-left {
 	float: right!important;
 	}
-	.logo-2 {
-		float: left;
-	}
-	.logo-2 + h2 {
-		float: left;
-	    display: block;
-	    font-size: 21px;
-	    font-weight: 900;
-	    padding: 6px 15px 5px;
-	    text-transform: uppercase;
-	}
+.logo-2 {
+	float: left;
+}
+.logo-2 + h2 {
+	float: left;
+    display: block;
+    font-size: 21px;
+    font-weight: 900;
+    padding: 6px 15px 5px;
+    text-transform: uppercase;
+}
