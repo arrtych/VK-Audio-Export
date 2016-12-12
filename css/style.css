@@ -53,3 +53,13 @@
 .start-btn a {
 	font-size: 18px;
 }
+.shareaholic-canvas {
+	margin-top: 30px;
+}
+.navbar-fixed-top.animated .shareaholic-canvas{
+	margin: 0;
+	position: relative;
+}
+.navbar-fixed-top.animated .navbar-brand {
+	padding-top: 12px;
+}
