@@ -2,7 +2,8 @@ var lastContentSendMessage = null,
     service, tracker,
     downloads = window.downloadQueue || [],
     vkData = window.vkData || {},
-    userLabel = 'User-' + vkData.user_id;
+    userLabel = 'User-' + vkData.user_id,
+    selectedAudios = [];
 
 service = analytics.getService('vk_audio_export');
 // service.getConfig().addCallback(initAnalyticsConfig);
@@ -130,7 +131,7 @@ function getAudios(params, callback, method) {
             }
             var pages = response.count / response.num;
             if(i < response.num) {
-                var percent = (100 - (i / response.num * 100));
+                var percent = (100 - (i / response.num * 100)).toFixed(1);
                 $('.audios-loss').html("-" + percent + "%").removeClass('hide').addClass('show').tooltip('destroy').attr('title', percent + '% удалённых треков').tooltip('fixTitle').tooltip({
                     placement: 'right'
                 });
@@ -145,7 +146,7 @@ function getAudios(params, callback, method) {
                 $pag_wrapper.find('.pagination').remove();
                 $pag_wrapper.append('<div class="pagination"></div>');
                 for(var i = 0; i < pages; i++) {
-                    console.log(i, response.page, i == response.page);
+                    // console.log(i, response.page, i == response.page);
                     $pag_wrapper.find('.pagination').append('<a href="' + paginationPrefix + (i + 1) + '"' + (i == response.page ? ' class="current-page"' : '') + ' data-hash="' + paginationPrefix + (i + 1) + '">' + (i + 1) + '</a>');
                 }
                 var owl = $pag_wrapper.find('.pagination');
@@ -285,6 +286,7 @@ $(document).ready(function(){
             $audio.find('.checkbox input').prop('checked', checked)
         });
     });
+
     var $user = $('.user');
     if($user.length > 0) {
         sendMessage('getMyInfo', function(response){

@@ -17,6 +17,7 @@
       "fileSystem": ["write", "retainEntries", "directory"]
     },
     "identity",
+    "webview",
     "storage",
     "https://www.google-analytics.com/*",
     "https://oauth.vk.com/authorize",

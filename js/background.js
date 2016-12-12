@@ -216,24 +216,46 @@ function parseRedirectFragment(fragment) {
     return values;
 }
 function authorize(callback) {
-    chrome.identity.launchWebAuthFlow(authObj, function(redirect_url) {
-        // console.log(redirect_url);
-        if(chrome.runtime.lastError) {
-            if(callback) callback(null, new Error(chrome.runtime.lastError));
-        } else {
-            var matches = redirect_url.match(redirectRe);
-            // console.log('redirect_url', redirect_url, matches);
-            if (matches && matches.length > 1) {
-                if(callback) {
-                    handleProviderResponse(parseRedirectFragment(matches[1]), function(data, error){
-                        callback(data, error);
-                    });
-                }
-            } else {
-                if(callback) callback(null, new Error('Invalid redirect URI'));
+    chrome.app.window.create('auth.html', {
+        id: "authorizeWindow",
+        innerBounds: {
+            minWidth: 670,
+            minHeight: 380,
+            maxWidth: 800,
+            maxHeight: 520
+        },
+        hidden: true
+        // resizable: false
+    }, function (appWin) {
+        appWin.contentWindow.addEventListener('DOMContentLoaded',
+            function(e) {
+                var webview = appWin.contentWindow.document.querySelector('webview');
+                webview.addEventListener("loadredirect", function(e) {
+                    var authData = {};
+                    if(e.newUrl.indexOf('access_token') > -1) {
+                        var result = e.newUrl.split('#')[1].split('&');
+                        authData.access_token = result[0].split('=')[1];
+                        authData.expires = result[1].split('=')[1];
+                        authData.user_id = result[2].split('=')[1];
+                        webview.clearData({
+                            since: 0
+                        }, {
+                            cookies: true
+                        }, function(){
+                            appWin.close();
+                            if(callback) {
+                                handleProviderResponse(authData, function(data, error){
+                                    callback(data, error);
+                                });
+                            }
+                        });
+                    } else {
+                        if(callback) callback(null, new Error('Invalid redirect URI'));
+                    }
+                });
+                appWin.show();
             }
-        }
-        return;
+        );
     });
 }
 function launchWelcome(launchData, vkData) {
@@ -265,13 +287,13 @@ function launchMain(launchData, vkData, downloadQueue) {
     });
 }
 function logOut() {
-    chrome.identity.removeCachedAuthToken({token: storage.access_token}, function(){
-        chrome.storage.sync.remove('vk_user_data', function () {
-            //default
-            var mainWindow = chrome.app.window.get('mainWindow');
-            if(mainWindow) mainWindow.close();
-            launchWelcome(false, false);
-        });
+    chrome.storage.sync.remove('vk_user_data', function () {
+        //default
+        var mainWindow = chrome.app.window.get('mainWindow');
+        if(mainWindow) mainWindow.close();
+        var downloadWindow = chrome.app.window.get('downloadsWindow');
+        if(downloadWindow) downloadWindow.close();
+        launchWelcome(false, false);
     });
 }
 function launchDownloadManager(callback, data) {
@@ -309,13 +331,14 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     var action = message.action;
     delete message.action;
     if(action) {
-        console.log('message', message, 'sender', sender, 'sendResponse', sendResponse);
+        console.info('chrome.runtime.onMessage.listener', action, message, sender);
         if(action == 'authorize') {
             authorize(function(vkData, error){
                 if(error) {
                     sendResponse({error: error});
                 } else {
                     initDownloads(function(downloadQueue, error) {
+                        console.log('afterinitDownloads', vkData);
                         sendResponse(vkData);
                         chrome.app.window.get('welcomeWindow').close();
                         launchMain(false, vkData, downloadQueue);
