@@ -34,12 +34,43 @@ function sendMessage(action, callback, data) {
                 msg[property] = data[property];
             }
         }
-        if(action == 'getAudios') lastContentSendMessage = msg;
+        if(action == 'getAudios' || action == 'getAlbumAudios') lastContentSendMessage = msg;
         chrome.runtime.sendMessage(msg, function(response){
             if(callback) callback(response);
             console.log('action', action, 'response', response);
             if(chrome.runtime.lastError) console.error('action', action, chrome.runtime.lastError);
         });
+    }
+}
+function bulkDownload() {
+
+}
+function checkButton() {
+    selectedAudios = [];
+    $('.audios .audio').each(function(i, e){
+        var $audio = $(this),
+            checked = $audio.find('.checkbox input').prop('checked');
+        if(checked) {
+            var $that = $(this),
+                url = $that.find('.download').attr('href'),
+                artist = $that.find('.artist').text(),
+                title = $that.find('.title').text(),
+                audio_id = $that.data('audio-id'),
+                owner_id = $that.data('owner-id'),
+                id = owner_id + "_" + audio_id;
+            selectedAudios.push({
+                id: id,
+                url: url,
+                title: title,
+                artist: artist
+            });
+        }
+    });
+    console.log('selected', selectedAudios);
+    if(selectedAudios.length > 0) {
+        $('.bulk-download').removeClass('hide');
+    } else {
+        $('.bulk-download').addClass('hide');
     }
 }
 function getAudios(params, callback, method) {
@@ -49,9 +80,6 @@ function getAudios(params, callback, method) {
     sendMessage(method, function(response){
         if(response.items) {
             $('.audios').empty();
-            if(response.num) {
-                $('.audios-num').text(response.num);
-            }
             for(var i = 0; i < response.items.length; i++) {
                 var e = response.items[i],
                     id = e.owner_id + "_" + e.id,
@@ -86,7 +114,6 @@ function getAudios(params, callback, method) {
                             id = owner_id + "_" + audio_id;
                         $('.audio-' + id).addClass('downloading');
                         sendMessage('startAudioDownload', function (response) {
-                            console.log('startAudioDownload', response);
                             if (response && !response.error) {
                                 if (response.count) $('.downloads-count').text(response.count);
                                 if (response.data) {
@@ -108,7 +135,6 @@ function getAudios(params, callback, method) {
                             } else {
                                 $('.audio-' + id).removeClass('downloading').addClass('download-error');
                                 tracker.sendEvent(userLabel, 'download.error', JSON.stringify({
-                                    userID: '',
                                     title: title,
                                     artist: artist,
                                     id: id
@@ -123,15 +149,26 @@ function getAudios(params, callback, method) {
                         e.preventDefault();
                     });
                 } else {
-                    $audio.find('.download').on('click', function (e) {
-                        e.preventDefault();
-                    });
+                    //todo: already downloaded
                 }
+                $audio.find('.checkbox input').on('change', function (e) {
+                    checkButton();
+                });
                 $('.audios').append($audio);
             }
+            $('.audios-num').text(i);
+
+            if(method == 'getAlbumAudios') {
+                var $badge = $('.albums .active').find('.badge');
+                $badge.removeClass('hide');
+                $badge.text(response.count);
+            }
+
             var pages = response.count / response.num;
-            if(i < response.num) {
-                var percent = (100 - (i / response.num * 100)).toFixed(1);
+            if((i < response.num && response.count >= response.num) || (response.num > i && response.num > response.count && response.count > i)) {
+                var percent;
+                if((response.num > i && response.num > response.count && response.count > i)) percent = (100 - (i / response.count * 100)).toFixed(0);
+                else percent = (100 - (i / response.num * 100)).toFixed(0);
                 $('.audios-loss').html("-" + percent + "%").removeClass('hide').addClass('show').tooltip('destroy').attr('title', percent + '% удалённых треков').tooltip('fixTitle').tooltip({
                     placement: 'right'
                 });
@@ -285,8 +322,17 @@ $(document).ready(function(){
             var $audio = $(this);
             $audio.find('.checkbox input').prop('checked', checked)
         });
+        checkButton();
     });
-
+    $('.bulk-download').on('click', function(){
+        if(selectedAudios.length > 0) {
+            sendMessage('startBulkAudioDownload', function (response) {
+                console.log('startBulkAudioDownload', response);
+            }, selectedAudios);
+        } else {
+            console.error('Nothing to download');
+        }
+    });
     var $user = $('.user');
     if($user.length > 0) {
         sendMessage('getMyInfo', function(response){
@@ -303,7 +349,7 @@ $(document).ready(function(){
             }
             if(response.items) {
                 $.each(response.items, function(i, e){
-                    var $album = $('<a href="#" class="list-group-item album" data-id="' + e.album_id + '"><span>' + e.title + '</span><i class="fa fa-cart-arrow-down hide" aria-hidden="true" title="Add to Download List"></i><span class="badge">14</span></a>');
+                    var $album = $('<a href="#" class="list-group-item album" data-id="' + e.album_id + '"><span>' + e.title + '</span><i class="fa fa-cart-arrow-down hide" aria-hidden="true" title="Add to Download List"></i><span class="badge hide">?</span></a>');
                     $album.on('click', function(){
                         var $that = $(this),
                             album_id = $that.data('id');
@@ -329,5 +375,8 @@ $(document).ready(function(){
             }
         });
         getAudios();
+        $('.get-audios').on('click', function(){
+            getAudios();
+        });
     }
 });

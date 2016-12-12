@@ -7424,6 +7424,13 @@ a.list-group-item-danger.active:focus {
   font-size: 18px;
   margin: 0;
 }
+.bulk-download {
+  float: right;
+  margin-right: 13px;
+  position: relative;
+  padding: 0px 10px;
+  top: 7px;
+}
 .downloads-container .downloaded-size {
   font-size: 10px;
   padding-left: 10px;
@@ -7468,6 +7475,12 @@ a.list-group-item-danger.active:focus {
 .downloads-container .header {
   border-bottom: 1px solid #dcdcdc;
   padding: 10px 3px 10px 6px;
+}
+.downloads-container .header h4 {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .downloads-container .footer {
   position: absolute;
@@ -7516,7 +7529,7 @@ a.list-group-item-danger.active:focus {
   text-overflow: ellipsis;
 }
 .downloads-container .downloads .download .middle h5 {
-  font-size: 17px;
+  font-size: 13px;
   margin: 12px 0;
   width: 100%;
   white-space: nowrap;
@@ -7589,12 +7602,17 @@ a.list-group-item-danger.active:focus {
 .downloads-container .downloads .download.paused .start-pause i:before {
   content: "\f144";
 }
+.audios-container .get-audios:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
 .audios-container .loading {
   display: inline;
   padding-left: 8px;
   font-size: 15px;
-  margin-top: 8px;
   vertical-align: middle;
+  position: absolute;
+  margin-top: 2px;
 }
 .audios-container .loading i {
   vertical-align: middle;

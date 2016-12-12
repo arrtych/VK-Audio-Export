@@ -12,47 +12,53 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (sender.url && sender.url.indexOf('background_page.html') != -1) {
         if (action) {
             if(action == 'runNextTask') {
-                var savedAudio = saveAudio(message.data),
-                    data = message.data, $download = $, $audioSize = $, $progress = $;
-                console.info('runNextTask');
-                if(data.audio) {
-                    $download = $('.download-' + data.audio.id).eq(0).addClass('downloading');
-                    $progress = $download.find('.progress');
-                    $audioSize = $progress.parent().find('.audio-size');
-                }
+                var makeAction = function(message, sendResponse){
+                    var savedAudio = saveAudio(message.data),
+                        data = message.data, $download = $, $audioSize = $, $progress = $;
+                    console.info('runNextTask');
+                    if(data.audio) {
+                        $download = $('.download-' + data.audio.id).eq(0).addClass('downloading');
+                        $progress = $download.find('.progress');
+                        $audioSize = $progress.parent().find('.audio-size');
+                    }
 
-                savedAudio.fail((function($down) {
-                    return function(e){
-                        console.log('saveAudio.fail', e);
-                        sendResponse({
-                            error: e
-                        });
-                    };
-                })($download));
+                    savedAudio.fail((function($down) {
+                        return function(e){
+                            console.log('saveAudio.fail', e);
+                            sendResponse({
+                                error: e
+                            });
+                        };
+                    })($download));
 
-                savedAudio.done((function($down) {
-                    return function(audioFile){
-                        chrome.storage.local.get('downloadQueue', function(data){
-                            if(data.downloadQueue) downloads = data.downloadQueue;
-                            $('.downloads-num').text(downloads.length);
-                        });
-                        console.log('saveAudio.done', audioFile);
-                        $down.removeClass('downloading').addClass('downloaded');
-                        sendResponse(audioFile);
-                    };
-                })($download));
+                    savedAudio.done((function($down) {
+                        return function(audioFile){
+                            chrome.storage.local.get('downloadQueue', function(data){
+                                if(data.downloadQueue) downloads = data.downloadQueue;
+                                $('.downloads-num').text(downloads.length);
+                            });
+                            console.log('saveAudio.done', audioFile);
+                            $down.removeClass('downloading').addClass('downloaded');
+                            sendResponse(audioFile);
+                        };
+                    })($download));
 
-                savedAudio.progress((function($prog, $aSize) {
-                    return function(percentComplete, event) {
-                        $prog.children().css('width', percentComplete + "%");
-                        if($aSize.hasClass('hide')) {
-                            $aSize.text(formatBytes(event.total));
-                            $aSize.removeClass('hide');
-                            if(event.total) downloadedSize+=event.total;
-                            $('.downloaded-size').text(formatBytes(downloadedSize));
-                        }
-                    };
-                })($progress, $audioSize));
+                    savedAudio.progress((function($prog, $aSize) {
+                        return function(percentComplete, event) {
+                            $prog.children().css('width', percentComplete + "%");
+                            if($aSize.hasClass('hide')) {
+                                $aSize.text(formatBytes(event.total));
+                                $aSize.removeClass('hide');
+                                if(event.total) downloadedSize+=event.total;
+                                $('.downloaded-size').text(formatBytes(downloadedSize));
+                            }
+                        };
+                    })($progress, $audioSize));
+                };
+                if(!default_save_dir) initDownloads(function(){
+                    makeAction(message, sendResponse);
+                });
+                else makeAction(message, sendResponse);
                 return true;
             } else if(action == 'pauseDownloadingTask') {
                 var data = message.data,
@@ -69,6 +75,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         if(action) {
             if(action == "startAudioDownload") {
                 prependDownload(message);
+            } else if(action == "startBulkAudioDownload") {
+                $.each(message, function(i, audio) {
+                    prependDownload(audio);
+                });
             }
         }
     }
@@ -248,7 +258,8 @@ function prependDownload(e) {
             });
         })(e);
         if(e.total) downloadedSize+=e.total;
-        $('.downloaded-size').text(formatBytes(downloadedSize));
+        var formattedSize = formatBytes(downloadedSize);
+        $('.downloaded-size').text(formattedSize).tooltip('destroy').attr('title', 'Скачано ' + formattedSize).tooltip('fixTitle').tooltip();
         $('.downloads').prepend($download);
     }
 }

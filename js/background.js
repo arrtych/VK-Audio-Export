@@ -410,6 +410,22 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                 sendResponse(true);
             });
             return true;
+        } else if(action == 'startBulkAudioDownload') {
+            launchDownloadManager(function(down, error){
+                $.each(message, function(i, audio){
+                    var downloadDef = downloadAdd(audio, true);
+                    downloadDef.done(function(answer){
+                        console.log('finish.BulkAudioDownload', audio, answer);
+                        // answer = $.extend(answer, {count: downloadQueue.length});
+                        // sendResponse(answer);
+                    });
+                    downloadDef.fail(function(error){
+                        console.error('downloadDef', error);
+                        // sendResponse({error: error});
+                    });
+                });
+            });
+            return true;
         } else if(action == 'startAudioDownload') {
             launchDownloadManager(function(down, error){
                 var downloadDef = downloadAdd(message, true);

@@ -235,6 +235,13 @@
     }
   }
 }
+.bulk-download {
+  float: right;
+  margin-right: 13px;
+  position: relative;
+  padding: 0px 10px;
+  top: 7px;
+}
 .downloads-container {
   .downloaded-size {
     font-size: 10px;
@@ -286,6 +293,12 @@
   .header {
     border-bottom: 1px solid #dcdcdc;
     padding: 10px 3px 10px 6px;
+    h4 {
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
   .footer {
     position: absolute;
@@ -331,7 +344,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         h5 {
-          font-size: 17px;
+          font-size: 13px;
           margin: 12px 0;
           width: 100%;
           white-space: nowrap;
@@ -422,12 +435,19 @@
   }
 }
 .audios-container {
+  .get-audios {
+    &:hover {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  }
   .loading {
     display: inline;
     padding-left: 8px;
     font-size: 15px;
-    margin-top: 8px;
     vertical-align: middle;
+    position: absolute;
+    margin-top: 2px;
     i {
       vertical-align: middle;
       position: relative;
