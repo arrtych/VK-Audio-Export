@@ -11,6 +11,37 @@ service = analytics.getService('vk_audio_export');
 tracker = service.getTracker('UA-88814053-1');
 tracker.sendAppView('mainWindow');
 
+soundManager.setup({
+    //useFlashBlock: false,
+    //flashLoadTimeout: 0,
+    //useWaveformData: true,
+    //wmode: 'transparent',
+    //useWaveformData: true,
+    //useHighPerformance: true,
+    //updatePageTitle: true,
+    //forceUseGlobalHTML5Audio: true,
+    // url: '/swf/',
+    debugFlash: true,
+    preferFlash: false, // prefer 100% HTML5 mode, where both supported
+    ontimeout: function(){
+        var loaded = soundManager.getMoviePercent();
+        console.warn('No response (yet), flash movie '+(loaded?'loaded OK (likely security/error case)':'has not loaded (likely flash-blocked.)')+' Waiting indefinitely ...');
+    },
+    onready: function() {
+        console.info('SM2 ready!');
+    },
+    flashVersion: 9,
+    waitForWindowLoad: true,
+    defaultOptions: {
+        usePeakData: false
+        // onid3: function(){
+        // console.log('ID3');
+        // //console.log(this.id3);
+        // }
+    }
+});
+
+
 String.prototype.toHHMMSS = function () {
     var sec_num = parseInt(this, 10); // don't forget the second param
     var hours   = Math.floor(sec_num / 3600);
@@ -93,7 +124,7 @@ function getAudios(params, callback, method) {
                     classes.push('downloaded');
                 }
                 var $audio = $('<div class="' + classes.join(" ") + '" data-owner-id="' + e.owner_id + '" data-audio-id="' + e.id + '"><div class="left">' +
-                    '<a href="#"><i class="fa fa-play-circle fa-2x" aria-hidden="true"></i></a></div>' +
+                    '<a href="#" class="play-audio"><i class="fa fa-play-circle fa-2x" aria-hidden="true"></i></a></div>' +
                     '<div class="middle"><h5><span class="artist">' + e.artist + '</span> - <span class="title" title="' + e.title + '">' + e.title + '</span></h5>' +
                     '</div><div class="right"><div class="checkbox">' +
                     '<input type="checkbox" value="None" id="checkbox-' + id + '" name="check" />' +
@@ -153,6 +184,32 @@ function getAudios(params, callback, method) {
                 }
                 $audio.find('.checkbox input').on('change', function (e) {
                     checkButton();
+                });
+                $audio.find('.play-audio').on('click', function (e) {
+                    soundManager.stopAll();
+                    $audio.siblings().removeClass('playing');
+                    var $that = $(this),
+                        $parent = $that.parent().parent(),
+                        artist = $parent.find('.artist').text(),
+                        title = $parent.find('.title').text(),
+                        url = $parent.find('.download').attr('href'),
+                        audio_id = $parent.data('audio-id'),
+                        owner_id = $parent.data('owner-id'),
+                        id = owner_id + "_" + audio_id;
+                    var sound = soundManager.getSoundById(id);
+                    if(!sound) {
+                        sound = soundManager.createSound({
+                            id: id,
+                            url: url
+                        });
+                    }
+                    if(!$parent.hasClass('playing')) {
+                        sound.play();
+                        $parent.addClass('playing');
+                    } else {
+                        sound.pause();
+                        $parent.removeClass('playing').addClass('paused');
+                    }
                 });
                 $('.audios').append($audio);
             }

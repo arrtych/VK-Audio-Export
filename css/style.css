@@ -7250,7 +7250,7 @@ a.list-group-item-danger.active:focus {
   top: 3px;
 }
 .albums .list-group .album span:not(.badge) {
-  width: 87%;
+  width: 80%;
   white-space: nowrap;
   display: inline-block;
   overflow: hidden;
@@ -7676,6 +7676,18 @@ a.list-group-item-danger.active:focus {
   float: right;
   display: block;
   margin-top: 14px;
+}
+.audios-container .audios .audio.playing {
+  background: #158cba;
+}
+.audios-container .audios .audio.playing .play-audio i {
+  color: white;
+}
+.audios-container .audios .audio.playing .play-audio i:before {
+  content: "\f28b";
+}
+.audios-container .audios .audio.playing .download {
+  color: #fcfff4;
 }
 .audios-container .audios .audio.downloading .download i {
   -webkit-animation: fa-spin 2s infinite linear;
