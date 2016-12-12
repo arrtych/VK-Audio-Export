@@ -16,11 +16,40 @@
 .logo-2 {
 	float: left;
 }
-.logo-2 + h2 {
-	float: left;
+.navbar-brand h2 {
+	/*float: left;*/
     display: block;
-    font-size: 21px;
+    font-size: 1.2em;
     font-weight: 900;
     padding: 6px 15px 5px;
     text-transform: uppercase;
+    float: right;
+}
+.logo-heading-top{
+	color: white;
+	font-size: 2em !important;
+	margin-top: 1em;
+}
+#vkshare0{
+	margin-top: 1.4em;
+}
+#vkshare0 td:nth-child(2) a{
+    height: 21px!important;
+}
+.slogan{
+	font-family: inherit;
+	font-weight: bold;
+}
+.attention{
+	color: #354259  !important;
+    background: #c3cfe9;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+.start-btn{
+    padding-top: 2em;
+}
+.start-btn a {
+	font-size: 18px;
 }

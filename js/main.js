@@ -1,5 +1,7 @@
 $(window).load(function() {
     $("#preloader").fadeOut("slow");
+    $(".logo-heading").addClass("logo-heading-top");
+
 });
 
 $(document).ready(function(){
@@ -20,9 +22,12 @@ $(document).ready(function(){
     //animated header class
     $(window).scroll(function () {
         if ($(window).scrollTop() > 100) {
+            $(".logo-heading").removeClass("logo-heading-top");
             $(".navbar-default").addClass("animated");
+            
         } else {
             $(".navbar-default").removeClass('animated');
+            $(".logo-heading").addClass("logo-heading-top");
         }
     });
 
