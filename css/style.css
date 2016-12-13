@@ -7378,6 +7378,7 @@ a.list-group-item-danger.active:focus {
   position: relative;
   width: 100%;
   top: 4px;
+  min-width: 180px;
 }
 .player-container .right .progress-container {
   position: relative;
@@ -7404,11 +7405,21 @@ a.list-group-item-danger.active:focus {
   margin-bottom: 0;
   font-weight: 600;
   margin-top: 0;
+  white-space: nowrap;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }
 .player-container .right h5 {
   font-size: 1.2em;
   margin-top: 6px;
   margin-bottom: 0;
+  white-space: nowrap;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }
 .captcha-form .captcha-img {
   height: 55px;
@@ -7668,6 +7679,10 @@ a.list-group-item-danger.active:focus {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.audios-container .audios .audio .middle h5 > span {
+  user-select: initial;
+  cursor: text;
+}
 .audios-container .audios .audio .middle h5 > span:first-of-type {
   font-weight: 600;
 }
@@ -7743,6 +7758,7 @@ a.list-group-item-danger.active:focus {
 .audios-container .audios .audio.downloaded .download {
   -webkit-animation: none;
   animation: none;
+  cursor: default;
 }
 .audios-container .audios .audio.downloaded .download i {
   color: #28b62c;

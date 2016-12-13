@@ -2,12 +2,22 @@
 Export tool for audios in VK.com before audio API closing.
 
 Download Google [CRX Package Format (.crx file)](https://github.com/4matic/VK-Audio-Export/blob/master/dist/VK-Audio-Export.crx?raw=true) and install it.
+[Installation Video for non Chrome Web Store Package](https://www.youtube.com/watch?v=HTPGN4drCXI)
+
 
 Welcome Screen:
+
 ![Welcome Screen](https://raw.githubusercontent.com/4matic/VK-Audio-Export/master/docs/img/welcome.PNG)
 
+
 Main Screen:
-![Main Screen](https://raw.githubusercontent.com/4matic/VK-Audio-Export/master/docs/img/responsive_main.PNG)
+
+![Main Screen](https://raw.githubusercontent.com/4matic/VK-Audio-Export/master/docs/img/mainWindow.png)
+
+
+Download Manager:
+
+![Download Screen](https://raw.githubusercontent.com/4matic/VK-Audio-Export/master/docs/img/downloadWindow.png)
 
 
 To try it:

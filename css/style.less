@@ -186,6 +186,7 @@
     position: relative;
     width: 100%;
     top: 4px;
+    min-width: 180px;
     .progress-container {
       position: relative;
       .current-time {
@@ -211,11 +212,21 @@
       margin-bottom: 0;
       font-weight: 600;
       margin-top: 0;
+      white-space: nowrap;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
     }
     h5 {
       font-size: 1.2em;
       margin-top: 6px;
       margin-bottom: 0;
+      white-space: nowrap;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
     }
   }
 }
@@ -510,6 +521,8 @@
           overflow: hidden;
           text-overflow: ellipsis;
           > span {
+            user-select: initial;
+            cursor: text;
             &:first-of-type {
               font-weight: 600;
             }
@@ -607,6 +620,7 @@
         .download {
           -webkit-animation: none;
           animation: none;
+          cursor: default;
           i {
             color: #28b62c;
             &:before {

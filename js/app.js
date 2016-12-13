@@ -11,7 +11,28 @@ service = analytics.getService('vk_audio_export');
 // Get a Tracker using your Google Analytics app Tracking ID.
 tracker = service.getTracker('UA-88814053-1');
 tracker.sendAppView('mainWindow');
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+    //authorizing
+    var action = message.action;
+    delete message.action;
+    if (sender.url && sender.url.indexOf('background_page.html') != -1) {
 
+    } else {
+        if(action) {
+            if (action == "finishAudioDownload") {
+                console.info('finishAudioDownload', message);
+                if(message.data && message.data.audio) {
+                    if(message.data.audio.id) $('.audio-' + message.data.audio.id).removeClass('downloading').addClass('downloaded');
+                    delete message.count;
+                    downloads.push($.extend(message.data.audio, {downloaded: true}));
+                }
+                if(message.downloads) {
+                    $('.downloads-count').text(message.downloads);
+                }
+            }
+        }
+    }
+});
 if(window.soundManager) {
     soundManager.setup({
         //useFlashBlock: false,
@@ -115,8 +136,14 @@ function checkButton() {
 function getAudios(params, callback, method) {
     var $loader = $('.header .loading');
     $loader.show();
+    $('#select-all').prop('checked', false);
     if(!method) method = 'getAudios';
     sendMessage(method, function(response){
+        if(response.num) {
+            var $label = $('.tracks-num a[data-num="' + response.num + '"]');
+            $label.removeClass('label-default').addClass('label-primary');
+            $label.siblings().removeClass('label-primary').addClass('label-default');
+        }
         if(response.items) {
             $('.audios').empty();
             for(var i = 0; i < response.items.length; i++) {
@@ -124,14 +151,18 @@ function getAudios(params, callback, method) {
                     id = e.owner_id + "_" + e.id,
                     downloaded = false,
                     classes = ['audio', 'audio-' + id];
-                var foundAudio = $.grep(downloads, function(e){
-                    return e.id && e.id === id;
-                });
+                var foundAudio = $.grep(downloads, (function(id){
+                    return function(e) {
+                        return (e.id && e.id === id) || (e.data && e.data.audio && e.data.audio.id === id);
+                    };
+                }(id)));
+                var downloadTitle = "Скачать";
+                var $player = $('.player-container');
                 if(foundAudio.length > 0 && foundAudio[0].downloaded) {
                     downloaded = true;
                     classes.push('downloaded');
+                    downloadTitle = "Скачано";
                 }
-                var $player = $('.player-container');
                 if($player.data('id') == id) {
                     if($player.hasClass('playing')) {
                         classes.push('playing');
@@ -145,7 +176,7 @@ function getAudios(params, callback, method) {
                     '</div><div class="right"><div class="checkbox">' +
                     '<input type="checkbox" value="None" id="checkbox-' + id + '" name="check" />' +
                     '<label for="checkbox-' + id + '"></label></div>' +
-                    '<a href="' + e.url + '" class="download" title="Download Audio"><i class="fa fa-download" aria-hidden="true"></i></a>' +
+                    '<a href="' + e.url + '" class="download" title="' + downloadTitle + '"><i class="fa fa-download" aria-hidden="true"></i></a>' +
                     '<span class="duration" data-duration="' + e.duration + '">' + (e.duration + "").toHHMMSS() + '</span>' +
                     '</div>' +
                     '</div>');
@@ -211,7 +242,9 @@ function getAudios(params, callback, method) {
                         audio_id = $parent.data('audio-id'),
                         owner_id = $parent.data('owner-id'),
                         id = owner_id + "_" + audio_id;
-                    $('.audios .audio.playing').not($parent).each(function(){
+                    var $audios = $('.audios .audio.playing');
+                    if($('.audios .audio.playing, .audios .audio.paused').length == 0) soundManager.stopAll();
+                    $audios.not($parent).each(function(){
                         var $th = $(this),
                             audio_id = $th.data('audio-id'),
                             owner_id = $th.data('owner-id'),
@@ -265,6 +298,8 @@ function getAudios(params, callback, method) {
                             onplay: function(){
                                 var $audio = $('.audio-' + this.id);
                                 if(!$audio.hasClass('failed')) {
+                                    $player.find('.artist').text(artist);
+                                    $player.find('.title').text(title);
                                     $audio.removeClass('paused audio-loading').addClass('playing');
                                     $player.removeClass('paused').addClass('playing');
                                     tracker.sendEvent(userLabel, 'play', JSON.stringify({
@@ -478,6 +513,12 @@ $(document).ready(function(){
     });
     $('.bulk-download').on('click', function(){
         if(selectedAudios.length > 0) {
+            $.each(selectedAudios, function(i, audio){
+                var $audio = $('.audio-' + audio.id);
+                $audio.find('.checkbox input').prop('checked', false);
+                $audio.removeClass('downloaded').addClass('downloading');
+            });
+            $('#select-all').prop('checked', false);
             sendMessage('startBulkAudioDownload', function (response) {
                 console.log('startBulkAudioDownload', response);
             }, selectedAudios);
@@ -532,4 +573,5 @@ $(document).ready(function(){
             $('.albums .album.active').removeClass('active');
         });
     }
+    $('[data-toggle="tooltip"]').tooltip();
 });

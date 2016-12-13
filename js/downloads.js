@@ -40,6 +40,12 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                             console.log('saveAudio.done', audioFile);
                             $down.removeClass('downloading waiting').addClass('downloaded');
                             sendResponse(audioFile);
+                            if(audioFile.total) {
+                                downloadedSize += audioFile.total;
+                                var formattedSize = formatBytes(downloadedSize);
+                                $('.downloaded-size').text(formattedSize).attr('title', 'Скачано ' + formattedSize).tooltip('fixTitle');
+                            }
+                            sendMessage('finishAudioDownload', null, $.extend(audioFile, {downloads: downloads.length}));
                         };
                     })($download));
 
@@ -49,19 +55,16 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                             if($aSize.hasClass('hide')) {
                                 $aSize.text(formatBytes(event.total));
                                 $aSize.removeClass('hide');
-                                if(event.total) {
-                                    downloadedSize += event.total;
-                                    var formattedSize = formatBytes(downloadedSize);
-                                    $('.downloaded-size').text(formattedSize).tooltip('destroy').attr('title', 'Скачано ' + formattedSize).tooltip('fixTitle').tooltip();
-                                }
                             }
                         };
                     })($progress, $audioSize));
                 };
-                if(!default_save_dir) initDownloads(function(){
-                    makeAction(message, sendResponse);
+                $(document).ready(function() {
+                    if (!default_save_dir) initDownloads(function () {
+                        makeAction(message, sendResponse);
+                    });
+                    else makeAction(message, sendResponse);
                 });
-                else makeAction(message, sendResponse);
                 return true;
             } else if(action == 'pauseDownloadingTask') {
                 var data = message.data,
@@ -132,7 +135,7 @@ function initDownloads(callback) {
         });
     });
 }
-function openDirectoryChoser($that) {
+function openDirectoryChoser($that, callback) {
     if(!choserOpened) {
         choserOpened = true;
         chrome.fileSystem.chooseEntry({type: 'openDirectory'}, function (theEntry) {
@@ -149,73 +152,88 @@ function openDirectoryChoser($that) {
                 chrome.storage.local.set({'default_save_dir': saveObject});
                 default_save_dir = saveObject;
                 $('#choose_dir span').text(displayPath);
+                if(callback) callback();
             });
         });
     }
 }
 function saveAudio(download) {
     var downloadDef = new $.Deferred();
-    if(default_save_dir) {
-        if(download.url) {
-            var xhr = new XMLHttpRequest(),
-                audioID = download.audio.id;
-            xhr.open("GET", download.url);
-            xhr.responseType = "blob";
-            xhr.onprogress = function (event) {
-                if (event.lengthComputable) {
-                    var percentComplete = Math.round(event.loaded / event.total * 100);
-                    return downloadDef.notify(percentComplete, event);
-                }
-            };
-            xhr.onerror = function(e){
-                delete xhrs[audioID];
-                downloadDef.reject(e);
-            };
-            xhr.onload = function (event) {
-                var blob = xhr.response;
-                delete xhrs[audioID];
-                chrome.fileSystem.restoreEntry(default_save_dir.path, function (restoredEntry) {
-                    console.log('restoredEntry', restoredEntry);
-                    chrome.fileSystem.getWritableEntry(restoredEntry, function (writeEntry) {
-                        console.log('writeEntry', writeEntry, download);
-                        var artist = download.audio &&  download.audio.artist ? download.audio.artist : 'VA Artist',
-                            title = download.audio && download.audio.title ? download.audio.title : 'Unnamed';
-                        writeEntry.getFile(artist + " - " + title + '.mp3', {
-                            create: true
-                        }, function (fileEntry) {
-                            console.log('fileEntry', fileEntry);
-                            fileEntry.createWriter(function (writer) {
-                                console.log('writer', writer);
-                                writer.onabort = function (e) {
-                                    console.error('writer onabort', e);
-                                    downloadDef.reject(e);
-                                };
-                                writer.onerror = function (e) {
-                                    console.error('writer error', e);
-                                    downloadDef.reject(e);
-                                };
-                                writer.onwriteend = function (e) {
-                                    console.info('file.ready', e);
-                                    downloadDef.resolve({
-                                        name: fileEntry.name,
-                                        data: download,
-                                        total: e.total,
-                                        fullPath: fileEntry.fullPath
-                                    });
-                                    // e.currentTarget.truncate(e.currentTarget.position);
-                                };
-                                writer.write(blob);
+    var makeAudioRequest = function(download, downloadDef){
+        var xhr = new XMLHttpRequest(),
+            audioID = download.audio.id;
+        xhr.open("GET", download.url);
+        xhr.responseType = "blob";
+        xhr.onprogress = function (event) {
+            if (event.lengthComputable) {
+                var percentComplete = Math.round(event.loaded / event.total * 100);
+                return downloadDef.notify(percentComplete, event);
+            }
+        };
+        xhr.onerror = function(e){
+            delete xhrs[audioID];
+            downloadDef.reject(e);
+        };
+        xhr.onload = function (event) {
+            var blob = xhr.response;
+            delete xhrs[audioID];
+            chrome.fileSystem.restoreEntry(default_save_dir.path, function (restoredEntry) {
+                console.log('restoredEntry', restoredEntry);
+                chrome.fileSystem.getWritableEntry(restoredEntry, function (writeEntry) {
+                    console.log('writeEntry', writeEntry, download);
+                    var artist = download.audio &&  download.audio.artist ? download.audio.artist : 'VA Artist',
+                        title = download.audio && download.audio.title ? download.audio.title : 'Unnamed';
+                    fileName = artist + " - " + title;
+                    fileName.replace(/[^\w\s\d\.\-_~,;:\[\]\(\]]/g, "");
+                    chrome.fileSystem.isWritableEntry(writeEntry, function(isWritable){
+                        if(isWritable) {
+                            writeEntry.getFile(fileName + '.mp3', {
+                                create: true
+                            }, function success(fileEntry) {
+                                console.log('fileEntry', fileEntry);
+                                fileEntry.createWriter(function (writer) {
+                                    console.log('writer', writer);
+                                    writer.onabort = function (e) {
+                                        console.error('writer onabort', e);
+                                        downloadDef.reject(e);
+                                    };
+                                    writer.onerror = function (e) {
+                                        console.error('writer error', e);
+                                        downloadDef.reject(e);
+                                    };
+                                    writer.onwriteend = function (e) {
+                                        console.info('file.ready', e);
+                                        downloadDef.resolve({
+                                            name: fileEntry.name,
+                                            data: download,
+                                            total: e.total,
+                                            fullPath: fileEntry.fullPath
+                                        });
+                                        // e.currentTarget.truncate(e.currentTarget.position);
+                                    };
+                                    writer.write(blob);
+                                });
+                            }, function error(error){
+                                // downloadDef.reject(error);
+                                console.error(error);
                             });
-                        });
+                        } else console.error('not writable');
                     });
                 });
-            };
-            xhrs[audioID] = xhr;
-            xhr.send();
+            });
+        };
+        xhrs[audioID] = xhr;
+        xhr.send();
+    };
+    if(default_save_dir) {
+        if(download.url) {
+            makeAudioRequest(download, downloadDef);
         } else downloadDef.reject('Empty url parameter');
     } else {
-        //openDirectoryChoser($('#choose_dir'));//todo: open folder choosing if empty
-        downloadDef.reject('Empty save directory');
+        openDirectoryChoser($('#choose_dir'), function(){
+            makeAudioRequest(download, downloadDef);
+        });//todo: open folder choosing if empty
+        // downloadDef.reject('Empty save directory');
     }
     return downloadDef;
 }
@@ -267,7 +285,7 @@ function prependDownload(e, waiting) {
         if(e.total) {
             downloadedSize += e.total;
             var formattedSize = formatBytes(downloadedSize);
-            $('.downloaded-size').text(formattedSize).tooltip('destroy').attr('title', 'Скачано ' + formattedSize).tooltip('fixTitle').tooltip();
+            $('.downloaded-size').text(formattedSize).attr('title', 'Скачано ' + formattedSize).tooltip('fixTitle').tooltip();
         }
         $('.downloads').prepend($download);
     }

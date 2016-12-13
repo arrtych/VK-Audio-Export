@@ -399,17 +399,36 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             var count = message.count || 20,
                 page = message.page || 0,
                 offset = 0;
-            if(count > 100) count = 100;
             offset = page * count;
-            requestVK('audio.get', {
-                need_user: 0,
-                count: count,
-                offset: offset
-            }, function (answer) {
-                answer.page = page;
-                answer.num = count;
-                sendResponse(answer);
-            });
+            if(count > 100) {
+                var owner_str = '',
+                    total = 8000;
+                if(message.owner_id) owner_str = '"owner_id": "' + message.owner_id + '", ';
+                var plus = 100;
+                if(count > 500) plus = 200;
+                requestVK('execute', {
+                    code: 'var audioRequest = API.audio.get({' + owner_str + '"count": "' + count + '", "offset": ' + offset + ' }); var audios = audioRequest.items;' +
+                    'var offset = ' + count + '; var audiosNum = audioRequest.count; ' +
+                    'while (offset < ' + count + ' && (' + offset + ') <  ' + total + '){' +
+                    'audios = audios + API.audio.get({' + owner_str + '"count": "' + count + '", "offset":  ' + offset + ' + offset}).items;' +
+                    'offset = offset + ' + count + ';' +
+                    '} return {"items": audios, "count": audiosNum};'
+                }, function (answer) {
+                    answer.page = page;
+                    answer.num = count;
+                    sendResponse(answer);
+                });
+            } else {
+                requestVK('audio.get', {
+                    need_user: 0,
+                    count: count,
+                    offset: offset
+                }, function (answer) {
+                    answer.page = page;
+                    answer.num = count;
+                    sendResponse(answer);
+                });
+            }
             return true;
         } else if(action == 'openDownloadManager') {
             launchDownloadManager(function(downloads, error){
@@ -427,13 +446,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                 $.each(message, function(i, audio){
                     var downloadDef = downloadAdd(audio, true);
                     downloadDef.done(function(answer){
-                        console.log('finish.BulkAudioDownload', audio, answer);
-                        // answer = $.extend(answer, {count: downloadQueue.length});
-                        // sendResponse(answer);
+
                     });
                     downloadDef.fail(function(error){
-                        console.error('downloadDef', error);
-                        // sendResponse({error: error});
+
                     });
                 });
             });
@@ -473,6 +489,8 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             downloadManager.pause(message);
             sendResponse({paused: true});
             return true;
+        } else if(action == 'finishAudioDownload') {
+            //console.info('finishAudioDownload', message);
         } else if(action == 'resumeAudioDownload') {
             downloadManager.resume(message);
             sendResponse({paused: false});
