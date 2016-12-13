@@ -572,6 +572,21 @@ $(document).ready(function(){
             getAudios();
             $('.albums .album.active').removeClass('active');
         });
+        $('.search-container .typeahead').typeahead({
+            minLength: 3,
+            fitToElement: true,
+            showHintOnFocus: true,
+            displayText: function(item){
+                return item.artist + " - " + item.title;
+            },
+            source: function(query, process) {
+                // abstracting out the "REST call and processing" in a seperate function
+                sendMessage('searchAudios', function(response){
+                    console.log(response);
+                    return process(response.items);
+                }, {query: query});
+            }
+        });
     }
     $('[data-toggle="tooltip"]').tooltip();
 });

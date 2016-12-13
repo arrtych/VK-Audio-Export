@@ -25,6 +25,8 @@
     "bootstrap": "^3.3.7",
     "font-awesome": "^4.7.0",
     "owl.carousel": "^2.2.0",
-    "chrome-platform-analytics": "^1.3.0"
+    "chrome-platform-analytics": "^1.3.0",
+    "typeahead.js": "^0.11.1",
+    "bootstrap3-typeahead": "^4.0.2"
   }
 }

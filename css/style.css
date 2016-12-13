@@ -7766,8 +7766,75 @@ a.list-group-item-danger.active:focus {
 .audios-container .audios .audio.downloaded .download i:before {
   content: "\f058";
 }
+.typeahead.dropdown-menu {
+  overflow: hidden;
+}
+.typeahead.dropdown-menu li > a {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  margin-right: 0;
+}
 .navbar {
   margin: 0;
+}
+.navbar > .container-fluid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.navbar > .container-fluid .navbar-header {
+  display: flex;
+  flex-grow: 2;
+}
+.navbar > .container-fluid .navbar-header .navbar-brand {
+  margin: 0!important;
+  display: flex;
+  padding-left: 16px;
+  flex-grow: 5;
+}
+.navbar > .container-fluid .navbar-header .navbar-brand h3 {
+  float: left;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 75%;
+  margin-right: 0;
+}
+.navbar > .container-fluid .navbar-header .search-container {
+  display: flex;
+  flex-grow: 21;
+}
+.navbar > .container-fluid .navbar-header .search-container .input-group {
+  flex-grow: 1;
+  display: flex;
+  margin-top: 6px;
+}
+.navbar > .container-fluid .navbar-header .search-container .input-group .typeahead {
+  flex-grow: 1;
+}
+.navbar > .container-fluid .navbar-header .search-container .input-group .search-btn {
+  outline: none;
+}
+.navbar > .container-fluid .navbar-header .search-container .input-group .search-btn i {
+  font-size: 15px;
+}
+.navbar > .container-fluid .navbar-collapse {
+  flex-grow: 1;
+  display: flex!important;
+  justify-content: flex-end;
+}
+.navbar > .container-fluid .navbar-collapse .navbar-right {
+  float: none!important;
+  display: flex;
+  justify-content: space-around;
+}
+.navbar > .container-fluid .navbar-collapse .navbar-right li {
+  float: none;
+  display: flex;
 }
 .navbar .navbar-brand {
   padding: 1px 0 0 10px;

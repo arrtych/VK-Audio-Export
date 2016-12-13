@@ -430,6 +430,19 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                 });
             }
             return true;
+        } else if(action == 'searchAudios') {
+            var query = "";
+            if(message.query) query = message.query;
+            requestVK('audio.search', {
+                q: query,
+                auto_complete: 0,
+                search_own: 1
+            }, function (answer) {
+                answer.page = page;
+                answer.num = count;
+                sendResponse(answer);
+            });
+            return true;
         } else if(action == 'openDownloadManager') {
             launchDownloadManager(function(downloads, error){
                 sendResponse(true);
