@@ -9,8 +9,7 @@ var authTabId = null,
     },
     downloadQueue = [],
     downloadManager = new DownloadManager();
-
-function openRequestedPopup(strUrl, strWindowName, sid, method, params) { //todo: must finish with captcha
+function openRequestedPopup(img, msg, sid, method, params) {
     chrome.app.window.create(
         'captcha.html',
         {
@@ -20,20 +19,36 @@ function openRequestedPopup(strUrl, strWindowName, sid, method, params) { //todo
                 maxWidth: 320,
                 maxHeight: 300
             },
-            id: "captchaWindow"
+            id: "captchaWindow",
+            hidden: true
         },
         function(win) {
-            win.contentWindow.onload = function() {
-                //var webview = win.contentWindow.document.querySelector('#my_webview');
-            };
+            win.contentWindow.addEventListener('DOMContentLoaded', function(e) {
+                win.show();
+                var image = win.contentWindow.document.querySelector('.captcha-img'),
+                    form = win.contentWindow.document.querySelector('.captcha-form'),
+                    value = win.contentWindow.document.querySelector('#captcha-key');
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', img, true);
+                xhr.responseType = 'blob';
+                xhr.onload = function(e) {
+                    image.src = win.contentWindow.URL.createObjectURL(this.response);
+                };
+                xhr.send();
+                form.onsubmit = function(){
+                    params = $.extend(params, {
+                        captcha_key: value.value,
+                        captcha_sid: sid
+                    });
+                    requestVK(method, params, function(answer){
+                        if (!answer.error) {
+                            win.close();
+                        }
+                    });
+                };
+            });
         }
     );
-    // if (captchaWindow == null || captchaWindow.closed) {
-    //     captchaWindow = window.open("", strWindowName, "resizable=yes,scrollbars=yes,status=no,height=300,width=200");
-    //     captchaWindow.document.body.innerHTML = "<form action='https://api.vk.com/method/" + method + "' method='POST'>" + "<img src='" + strUrl + "'>" + "<input type='text' name='captcha_key' placeholder='Enter captcha..'>" + "<input type='hidden' name='captcha_sid' value='" + sid + "'>" + "<input type='hidden' name='access_token' value='" + params.access_token + "'>" + "<input type='hidden' name='text' value='" + params.text + "'>" + "<button type='submit'>Check</button>" + "</form>";
-    // } else {
-    //     captchaWindow.focus();
-    // };
 }
 function requestVK(method, params, callback) {
     var req = function (method, params, callback) {
@@ -54,7 +69,6 @@ function requestVK(method, params, callback) {
                     } else if (answer.error.error_code === 5) {
                         logOut();
                     } else {
-                        //openRequestedPopup
                         callback(answer);
                     }
                 }
@@ -227,35 +241,33 @@ function authorize(callback) {
         hidden: true
         // resizable: false
     }, function (appWin) {
-        appWin.contentWindow.addEventListener('DOMContentLoaded',
-            function(e) {
-                var webview = appWin.contentWindow.document.querySelector('webview');
-                webview.addEventListener("loadredirect", function(e) {
-                    var authData = {};
-                    if(e.newUrl.indexOf('access_token') > -1) {
-                        var result = e.newUrl.split('#')[1].split('&');
-                        authData.access_token = result[0].split('=')[1];
-                        authData.expires = result[1].split('=')[1];
-                        authData.user_id = result[2].split('=')[1];
-                        webview.clearData({
-                            since: 0
-                        }, {
-                            cookies: true
-                        }, function(){
-                            appWin.close();
-                            if(callback) {
-                                handleProviderResponse(authData, function(data, error){
-                                    callback(data, error);
-                                });
-                            }
-                        });
-                    } else {
-                        if(callback) callback(null, new Error('Invalid redirect URI'));
-                    }
-                });
-                appWin.show();
-            }
-        );
+        appWin.contentWindow.addEventListener('DOMContentLoaded', function(e) {
+            var webview = appWin.contentWindow.document.querySelector('webview');
+            webview.addEventListener("loadredirect", function(e) {
+                var authData = {};
+                if(e.newUrl.indexOf('access_token') > -1) {
+                    var result = e.newUrl.split('#')[1].split('&');
+                    authData.access_token = result[0].split('=')[1];
+                    authData.expires = result[1].split('=')[1];
+                    authData.user_id = result[2].split('=')[1];
+                    webview.clearData({
+                        since: 0
+                    }, {
+                        cookies: true
+                    }, function(){
+                        appWin.close();
+                        if(callback) {
+                            handleProviderResponse(authData, function(data, error){
+                                callback(data, error);
+                            });
+                        }
+                    });
+                } else {
+                    if(callback) callback(null, new Error('Invalid redirect URI'));
+                }
+            });
+            appWin.show();
+        });
     });
 }
 function launchWelcome(launchData, vkData) {
