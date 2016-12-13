@@ -160,6 +160,13 @@
   background: #ffffff;
   padding: 10px 20px;
   border: 1px solid #cecece;
+  &.playing {
+    .play-audio {
+      &:before {
+        content: "\f28c";
+      }
+    }
+  }
   .left {
     i {
       font-size: 5em;
@@ -416,6 +423,19 @@
           right: -3px;
         }
       }
+      &.waiting {
+        .start-pause {
+          display: inline;
+          top: -1px;
+          right: -2px;
+          position: relative;
+          i {
+            &:before {
+              content: "\f017";
+            }
+          }
+        }
+      }
       &.downloaded {
         .progress {
           display: none;
@@ -516,6 +536,33 @@
           margin-top: 14px;
         }
       }
+      &.audio-loading {
+        .play-audio {
+          i {
+            -webkit-animation: fa-spin 2s infinite linear;
+            animation: fa-spin 2s infinite linear;
+            text-align: center;
+            &:before {
+              content: "\f1ce";
+            }
+          }
+        }
+      }
+      &.failed {
+        .play-audio {
+          i {
+            color: #c71d1d;
+            position: relative;
+            top: 1px;
+            &:before {
+              content: "\f071";
+            }
+          }
+        }
+      }
+      &.paused {
+        background: rgba(21, 140, 186, 0.25);
+      }
       &.playing {
         background: #158cba;
         .play-audio {
@@ -526,8 +573,10 @@
             }
           }
         }
-        .download {
-          color: #fcfff4;
+        .middle h5,
+        .duration,
+        .download i{
+          color: #fcfff4!important;
         }
       }
       &.downloading {
@@ -700,5 +749,19 @@
     font-style: italic;
     font-size: 17px;
     line-height: 51px;
+  }
+}
+.gitlink {
+  i {
+    color: #555555;
+    font-size: 33px;
+    position: relative;
+    padding-right: 9px;
+    top: 5px;
+  }
+  &:hover {
+    i {
+      color: black;
+    }
   }
 }

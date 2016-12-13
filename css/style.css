@@ -7358,6 +7358,9 @@ a.list-group-item-danger.active:focus {
   padding: 10px 20px;
   border: 1px solid #cecece;
 }
+.player-container.playing .play-audio:before {
+  content: "\f28c";
+}
 .player-container .left i {
   font-size: 5em;
   color: #158cba;
@@ -7593,6 +7596,15 @@ a.list-group-item-danger.active:focus {
   position: relative;
   right: -3px;
 }
+.downloads-container .downloads .download.waiting .start-pause {
+  display: inline;
+  top: -1px;
+  right: -2px;
+  position: relative;
+}
+.downloads-container .downloads .download.waiting .start-pause i:before {
+  content: "\f017";
+}
 .downloads-container .downloads .download.downloaded .progress {
   display: none;
 }
@@ -7677,6 +7689,25 @@ a.list-group-item-danger.active:focus {
   display: block;
   margin-top: 14px;
 }
+.audios-container .audios .audio.audio-loading .play-audio i {
+  -webkit-animation: fa-spin 2s infinite linear;
+  animation: fa-spin 2s infinite linear;
+  text-align: center;
+}
+.audios-container .audios .audio.audio-loading .play-audio i:before {
+  content: "\f1ce";
+}
+.audios-container .audios .audio.failed .play-audio i {
+  color: #c71d1d;
+  position: relative;
+  top: 1px;
+}
+.audios-container .audios .audio.failed .play-audio i:before {
+  content: "\f071";
+}
+.audios-container .audios .audio.paused {
+  background: rgba(21, 140, 186, 0.25);
+}
 .audios-container .audios .audio.playing {
   background: #158cba;
 }
@@ -7686,8 +7717,10 @@ a.list-group-item-danger.active:focus {
 .audios-container .audios .audio.playing .play-audio i:before {
   content: "\f28b";
 }
-.audios-container .audios .audio.playing .download {
-  color: #fcfff4;
+.audios-container .audios .audio.playing .middle h5,
+.audios-container .audios .audio.playing .duration,
+.audios-container .audios .audio.playing .download i {
+  color: #fcfff4!important;
 }
 .audios-container .audios .audio.downloading .download i {
   -webkit-animation: fa-spin 2s infinite linear;
@@ -7841,4 +7874,14 @@ a.list-group-item-danger.active:focus {
   font-style: italic;
   font-size: 17px;
   line-height: 51px;
+}
+.gitlink i {
+  color: #555555;
+  font-size: 33px;
+  position: relative;
+  padding-right: 9px;
+  top: 5px;
+}
+.gitlink:hover i {
+  color: black;
 }

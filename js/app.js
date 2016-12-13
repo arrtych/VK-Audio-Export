@@ -3,7 +3,8 @@ var lastContentSendMessage = null,
     downloads = window.downloadQueue || [],
     vkData = window.vkData || {},
     userLabel = 'User-' + vkData.user_id,
-    selectedAudios = [];
+    selectedAudios = [],
+    playingSound = null;
 
 service = analytics.getService('vk_audio_export');
 // service.getConfig().addCallback(initAnalyticsConfig);
@@ -11,36 +12,43 @@ service = analytics.getService('vk_audio_export');
 tracker = service.getTracker('UA-88814053-1');
 tracker.sendAppView('mainWindow');
 
-soundManager.setup({
-    //useFlashBlock: false,
-    //flashLoadTimeout: 0,
-    //useWaveformData: true,
-    //wmode: 'transparent',
-    //useWaveformData: true,
-    //useHighPerformance: true,
-    //updatePageTitle: true,
-    //forceUseGlobalHTML5Audio: true,
-    // url: '/swf/',
-    debugFlash: true,
-    preferFlash: false, // prefer 100% HTML5 mode, where both supported
-    ontimeout: function(){
-        var loaded = soundManager.getMoviePercent();
-        console.warn('No response (yet), flash movie '+(loaded?'loaded OK (likely security/error case)':'has not loaded (likely flash-blocked.)')+' Waiting indefinitely ...');
-    },
-    onready: function() {
-        console.info('SM2 ready!');
-    },
-    flashVersion: 9,
-    waitForWindowLoad: true,
-    defaultOptions: {
-        usePeakData: false
-        // onid3: function(){
-        // console.log('ID3');
-        // //console.log(this.id3);
-        // }
-    }
-});
+if(window.soundManager) {
+    soundManager.setup({
+        //useFlashBlock: false,
+        //flashLoadTimeout: 0,
+        //useWaveformData: true,
+        //wmode: 'transparent',
+        //useWaveformData: true,
+        //useHighPerformance: true,
+        //updatePageTitle: true,
+        //forceUseGlobalHTML5Audio: true,
+        // url: '/swf/',
+        debugFlash: true,
+        preferFlash: false, // prefer 100% HTML5 mode, where both supported
+        ontimeout: function () {
+            var loaded = soundManager.getMoviePercent();
+            console.warn('No response (yet), flash movie ' + (loaded ? 'loaded OK (likely security/error case)' : 'has not loaded (likely flash-blocked.)') + ' Waiting indefinitely ...');
+        },
+        onready: function () {
+            console.info('SM2 ready!');
+        },
+        flashVersion: 9,
+        waitForWindowLoad: true,
+        defaultOptions: {
+            usePeakData: false
+            // onid3: function(){
+            // console.log('ID3');
+            // //console.log(this.id3);
+            // }
+        }
+    });
+}
 
+function sec2Time(sec) {
+    var date = new Date(null);
+    date.setSeconds(sec/1000); // specify value for SECONDS here
+    return date.toISOString().substr(11, 8);
+}
 
 String.prototype.toHHMMSS = function () {
     var sec_num = parseInt(this, 10); // don't forget the second param
@@ -123,6 +131,14 @@ function getAudios(params, callback, method) {
                     downloaded = true;
                     classes.push('downloaded');
                 }
+                var $player = $('.player-container');
+                if($player.data('id') == id) {
+                    if($player.hasClass('playing')) {
+                        classes.push('playing');
+                    } else if($player.hasClass('paused')) {
+                        classes.push('paused');
+                    }
+                }
                 var $audio = $('<div class="' + classes.join(" ") + '" data-owner-id="' + e.owner_id + '" data-audio-id="' + e.id + '"><div class="left">' +
                     '<a href="#" class="play-audio"><i class="fa fa-play-circle fa-2x" aria-hidden="true"></i></a></div>' +
                     '<div class="middle"><h5><span class="artist">' + e.artist + '</span> - <span class="title" title="' + e.title + '">' + e.title + '</span></h5>' +
@@ -186,30 +202,95 @@ function getAudios(params, callback, method) {
                     checkButton();
                 });
                 $audio.find('.play-audio').on('click', function (e) {
-                    soundManager.stopAll();
-                    $audio.siblings().removeClass('playing');
                     var $that = $(this),
                         $parent = $that.parent().parent(),
                         artist = $parent.find('.artist').text(),
                         title = $parent.find('.title').text(),
+                        duration = $parent.find('.duration').text(),
                         url = $parent.find('.download').attr('href'),
                         audio_id = $parent.data('audio-id'),
                         owner_id = $parent.data('owner-id'),
                         id = owner_id + "_" + audio_id;
+                    $('.audios .audio.playing').not($parent).each(function(){
+                        var $th = $(this),
+                            audio_id = $th.data('audio-id'),
+                            owner_id = $th.data('owner-id'),
+                            id = owner_id + "_" + audio_id;
+                        soundManager.stop(id);
+                    });
+                    var $player = $('.player-container');
                     var sound = soundManager.getSoundById(id);
                     if(!sound) {
                         sound = soundManager.createSound({
                             id: id,
-                            url: url
+                            url: url,
+                            onpause: function(){
+                                var $audio = $('.audio-' + this.id);
+                                if(!$audio.hasClass('failed')) {
+                                    $audio.removeClass('playing audio-loading').addClass('paused');
+                                    $player.removeClass('playing').addClass('paused');
+                                }
+                            },
+                            whileplaying: function(){
+                                $player.find('.artist').text(artist);
+                                $player.find('.title').text(title);
+                                $player.data('id', id);
+                                $player.find('.current-time').text(sec2Time(this.position));
+                                $player.find('.audio-duration').text(duration);
+                                $player.find('.progress').children().css('width', ((this.position / this.durationEstimate) * 100) + '%');
+                            },
+                            onload: function(success){
+                                var $audio = $('.audio-' + this.id);
+                                $audio.removeClass('paused audio-loading').addClass('loaded');
+                                if(!success) {
+                                    $player.removeClass('playing paused')
+                                    $audio.removeClass('paused playing').addClass('failed');
+                                }
+                            },
+                            onfinish: function(){
+                                var $audio = $('.audio-' + this.id),
+                                    $next = $audio.next();
+                                $audio.removeClass('paused playing');
+                                $player.removeClass('playing paused');
+                                if($next) $next.find('.play-audio').click();
+                            },
+                            onstop: function(){
+                                var $audio = $('.audio-' + this.id);
+                                $player.removeClass('playing paused');
+                                $audio.removeClass('paused playing');
+                            },
+                            // onsuspend: function(){
+                            //     console.error('error');
+                            // },
+                            onplay: function(){
+                                var $audio = $('.audio-' + this.id);
+                                if(!$audio.hasClass('failed')) {
+                                    $audio.removeClass('paused audio-loading').addClass('playing');
+                                    $player.removeClass('paused').addClass('playing');
+                                    tracker.sendEvent(userLabel, 'play', JSON.stringify({
+                                        title: title,
+                                        artist: artist,
+                                        id: id
+                                    }));
+                                }
+                            },
+                            onresume: function(){
+                                var $audio = $('.audio-' + this.id);
+                                if(!$audio.hasClass('failed')) {
+                                    $audio.removeClass('paused audio-loading').addClass('playing');
+                                    $player.removeClass('paused').addClass('playing');
+                                }
+                            }
                         });
                     }
-                    if(!$parent.hasClass('playing')) {
-                        sound.play();
-                        $parent.addClass('playing');
-                    } else {
-                        sound.pause();
-                        $parent.removeClass('playing').addClass('paused');
-                    }
+                    playingSound = sound;
+                    sound.togglePause();
+                    //     sound.play();
+                    //     $parent.addClass('playing');
+                    // } else {
+                    //     sound.pause();
+                    //     $parent.removeClass('playing').addClass('paused');
+                    // }
                 });
                 $('.audios').append($audio);
             }
@@ -381,6 +462,20 @@ $(document).ready(function(){
         });
         checkButton();
     });
+    $('.player-container .play-audio').on('click', function(){
+        if(playingSound) playingSound.togglePause();
+        else {
+            $('.audios .audio .play-audio').eq(0).click();
+        }
+    });
+    $('.player-container .progress').click(function(e){
+        var clickedOffsetX = e.offsetX / $(this).width();
+        if(playingSound) {
+            //console.log(playingSound.position / playingSound.durationEstimate);
+            //console.log(clickedOffsetX * playingSound.durationEstimate);
+            playingSound.setPosition(clickedOffsetX * playingSound.durationEstimate);
+        }
+    });
     $('.bulk-download').on('click', function(){
         if(selectedAudios.length > 0) {
             sendMessage('startBulkAudioDownload', function (response) {
@@ -434,6 +529,7 @@ $(document).ready(function(){
         getAudios();
         $('.get-audios').on('click', function(){
             getAudios();
+            $('.albums .album.active').removeClass('active');
         });
     }
 });

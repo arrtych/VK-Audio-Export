@@ -17,7 +17,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                         data = message.data, $download = $, $audioSize = $, $progress = $;
                     console.info('runNextTask');
                     if(data.audio) {
-                        $download = $('.download-' + data.audio.id).eq(0).addClass('downloading');
+                        $download = $('.download-' + data.audio.id).eq(0).removeClass('waiting').addClass('downloading');
                         $progress = $download.find('.progress');
                         $audioSize = $progress.parent().find('.audio-size');
                     }
@@ -38,7 +38,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                                 $('.downloads-num').text(downloads.length);
                             });
                             console.log('saveAudio.done', audioFile);
-                            $down.removeClass('downloading').addClass('downloaded');
+                            $down.removeClass('downloading waiting').addClass('downloaded');
                             sendResponse(audioFile);
                         };
                     })($download));
@@ -49,8 +49,11 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                             if($aSize.hasClass('hide')) {
                                 $aSize.text(formatBytes(event.total));
                                 $aSize.removeClass('hide');
-                                if(event.total) downloadedSize+=event.total;
-                                $('.downloaded-size').text(formatBytes(downloadedSize));
+                                if(event.total) {
+                                    downloadedSize += event.total;
+                                    var formattedSize = formatBytes(downloadedSize);
+                                    $('.downloaded-size').text(formattedSize).tooltip('destroy').attr('title', 'Скачано ' + formattedSize).tooltip('fixTitle').tooltip();
+                                }
                             }
                         };
                     })($progress, $audioSize));
@@ -74,10 +77,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     } else {
         if(action) {
             if(action == "startAudioDownload") {
-                prependDownload(message);
+                prependDownload(message, true);
             } else if(action == "startBulkAudioDownload") {
                 $.each(message, function(i, audio) {
-                    prependDownload(audio);
+                    prependDownload(audio, true);
                 });
             }
         }
@@ -216,8 +219,11 @@ function saveAudio(download) {
     }
     return downloadDef;
 }
-
-function prependDownload(e) {
+/**
+ *
+ * @param e Audio
+ */
+function prependDownload(e, waiting) {
     var id = e.id;
     if(id) {
         var downloaded = false,
@@ -226,6 +232,7 @@ function prependDownload(e) {
         //     downloaded = true;
         //     classes.push('downloaded');
         // }
+        if(waiting) classes.push('waiting');
         var $download = $('<div class="' + classes.join(" ") + '" data-id="' + e.id + '">' +
             '<div class="middle"><h5><span class="artist">' + e.artist + '</span> - <span class="title" title="' + e.title + '">' + e.title + '</span></h5>' +
             '</div><div class="right"><span class="label label-default audio-size' + (e.total ? '' : ' hide') + '">' + formatBytes(e.total) + '</span><div class="checkbox">' +
@@ -257,9 +264,11 @@ function prependDownload(e) {
                 event.preventDefault();
             });
         })(e);
-        if(e.total) downloadedSize+=e.total;
-        var formattedSize = formatBytes(downloadedSize);
-        $('.downloaded-size').text(formattedSize).tooltip('destroy').attr('title', 'Скачано ' + formattedSize).tooltip('fixTitle').tooltip();
+        if(e.total) {
+            downloadedSize += e.total;
+            var formattedSize = formatBytes(downloadedSize);
+            $('.downloaded-size').text(formattedSize).tooltip('destroy').attr('title', 'Скачано ' + formattedSize).tooltip('fixTitle').tooltip();
+        }
         $('.downloads').prepend($download);
     }
 }
