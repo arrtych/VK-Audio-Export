@@ -48,7 +48,7 @@
     margin-bottom: 15px;
 }
 .install-links{
-    padding-top: 2em;
+	padding-top: 50px;
 }
 .start-btn a {
 	/*font-size: 18px;*/
@@ -92,5 +92,8 @@
     margin-bottom: 1em;
 }
 .google-store img{
-	max-width: 78%!important;
+	max-width: 90%!important;
+	position: relative;
+	left: -10px;
+	top: -5px;
 }
