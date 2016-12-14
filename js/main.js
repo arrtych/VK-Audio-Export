@@ -1,6 +1,15 @@
 $(window).load(function() {
     $("#preloader").fadeOut("slow");
     $(".logo-heading").addClass("logo-heading-top");
+    $('.init-slider').owlCarousel({
+        items:1,
+        merge:true,
+        autoHeight: true,
+        loop:true,
+        video:true,
+        smartSpeed: 600
+        
+    });
 
 });
 
@@ -11,14 +20,7 @@ $(document).ready(function(){
       }
     )
     wow.init();
-    $('.init-slider').owlCarousel({
-        items:1,
-        merge:true,
-        loop:true,
-        video:true,
-        smartSpeed: 600,
-        autoHeight: true
-    });
+
      $('#top-nav').onePageNav({
         currentClass: 'current',
         changeHash: true,
