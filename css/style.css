@@ -81,11 +81,13 @@
 .install-guide p{
     padding-left: 1.4em;
     padding-top: 1.4em;
+    padding-bottom: 1.4em;
 	font-size: 20px!important;
 	color: #25334a!important;
 }
 .cover-item{
 	margin-left: 1.4em;
-    margin-right: 2em;
+    margin-right: 1.4em;
     margin-top: 4em;
+    margin-bottom: 1em;
 }
