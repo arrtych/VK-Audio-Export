@@ -97,10 +97,10 @@
 	left: -12px;
 	top: -9px;
 }
-.block{
+.post-style{
 	padding-top: 0!important;
 
 }
-.vk_api_post .counter{
-	/*margin-top: 55px!important;*/
+.post-style .counter{
+	margin-top: 55px!important;
 }
