@@ -25,6 +25,9 @@
     text-transform: uppercase;
     float: right;
 }
+.navbar-brand a {
+	/*background-color: red;*/
+}
 .logo-heading-top{
 	color: white;
 	font-size: 2em !important;
