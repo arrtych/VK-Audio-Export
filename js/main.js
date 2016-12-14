@@ -301,7 +301,7 @@ $(document).ready(function(){
         );
     }
 })(jQuery);
-vkAudioExport = vkAudioExport || {};
+var vkAudioExport = {};
 vkAudioExport.Analytics = {
     trackEvent: function(category, action, label) {
         var eventObject = {
