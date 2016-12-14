@@ -48,7 +48,8 @@ $(document).ready(function(){
         merge:true,
         loop:true,
         video:true,
-        smartSpeed: 600
+        smartSpeed: 600,
+        autoHeight: true
     });
 
     /*$('input, textarea').data('holder', $('input, textarea').attr('placeholder'));

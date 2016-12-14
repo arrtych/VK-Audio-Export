@@ -51,7 +51,10 @@
     padding-top: 2em;
 }
 .start-btn a {
-	font-size: 18px;
+	/*font-size: 18px;*/
+	float: right;
+    padding: 15px 25px;
+    font-size: 25px;
 }
 .shareaholic-canvas {
 	margin-top: 30px;
@@ -62,4 +65,27 @@
 }
 .navbar-fixed-top.animated .navbar-brand {
 	padding-top: 12px;
+}
+.block-heading{
+	color: #158cba;
+    font-weight: bold;
+   
+}
+.advantages li{
+	padding-left: 2em;
+}
+.advantages li p{
+	font-size: 20px!important;
+	color: #25334a!important;
+}
+.install-guide p{
+    padding-left: 1.4em;
+    padding-top: 1.4em;
+	font-size: 20px!important;
+	color: #25334a!important;
+}
+.cover-item{
+	margin-left: 1.4em;
+    margin-right: 2em;
+    margin-top: 4em;
 }
