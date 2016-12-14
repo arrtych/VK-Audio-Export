@@ -301,3 +301,47 @@ $(document).ready(function(){
         );
     }
 })(jQuery);
+vkAudioExport = vkAudioExport || {};
+vkAudioExport.Analytics = {
+    trackEvent: function(category, action, label) {
+        var eventObject = {
+                'eventCategory': category,
+                'eventAction': action
+            },
+            mixpanelName = category;
+
+        if (label) {
+            eventObject.eventLabel = label;
+            mixpanelName = mixpanelName + ': ' + label;
+        }
+        if (window.ga) {
+            ga('send', 'event', eventObject);
+        }
+        if (window.mixpanel) {
+            mixpanel.track(mixpanelName);
+        }
+    },
+    bindToVideoPlay: function() {
+        var _this = this;
+        $('video').on('playing', function() {
+            _this.trackEvent('Footer', 'play', 'video');
+        });
+    },
+    bindToAllClicks: function() {
+        var _this = this;
+        $('body').on('click', '[data-analytics-category]', function() {
+            var category = $(this).data('analyticsCategory'),
+                label = $(this).data('analyticsLabel');
+
+            _this.trackEvent(category, 'click', label);
+        });
+    },
+
+    init: function() {
+        this.bindToAllClicks();
+        this.bindToVideoPlay();
+    }
+};
+$(function() {
+    vkAudioExport.Analytics.init();
+});
