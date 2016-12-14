@@ -98,9 +98,9 @@
 	top: -9px;
 }
 .vk_api_post{
-padding-top: 0;
+	padding-top: 0!important;
 
 }
 .vk_api_post .counter{
-	margin-top: 55px;
+	margin-top: 55px!important;
 }
