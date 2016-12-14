@@ -11,7 +11,14 @@ $(document).ready(function(){
       }
     )
     wow.init();
-
+    $('.init-slider').owlCarousel({
+        items:1,
+        merge:true,
+        loop:true,
+        video:true,
+        smartSpeed: 600,
+        autoHeight: true
+    });
      $('#top-nav').onePageNav({
         currentClass: 'current',
         changeHash: true,
@@ -43,14 +50,6 @@ $(document).ready(function(){
         omitWeeks: true
     });
 
-    $('.init-slider').owlCarousel({
-        items:1,
-        merge:true,
-        loop:true,
-        video:true,
-        smartSpeed: 600,
-        autoHeight: true
-    });
 
     /*$('input, textarea').data('holder', $('input, textarea').attr('placeholder'));
 
