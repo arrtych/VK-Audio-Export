@@ -82,9 +82,14 @@
                             </p>
                             <br>
                             <p>Сохрани свой плейлист и любимую музыку на свой компьютер пока есть такая возможность!</p>
-	                        <div class="wow start-btn" data-wow-delay="0.3s">
-	                        	<a class="btn btn-primary text-uppercase" href="https://github.com/4matic/VK-Audio-Export/blob/master/dist/VK-Audio-Export.crx?raw=true" role="button">Скачать &nbsp;<i class="fa fa-download" aria-hidden="true"></i></a>
-	                        </div>
+                            <div class="row install-links">
+                                <div class="col-lg-7 col-md-7 col-xs-6 google-store">
+                                    <a href="https://chrome.google.com/webstore/detail/vk-audio-export/haplpkjgigjbejbjgeiakeahglbkgejf"><img src="images/ChromeWebStore.png" alt="" class="img-responsive"></a>                                   
+                                </div>
+                                <div class="col-lg-5 col-md-5 col-xs-6 wow start-btn">
+                                     <a class="btn btn-primary text-uppercase" href="https://github.com/4matic/VK-Audio-Export/blob/master/dist/VK-Audio-Export.crx?raw=true" onclick="_trackEvent('site','download','header-button',new Date())" role="button">Скачать &nbsp;<i class="fa fa-download" aria-hidden="true"></i></a>
+                                </div>
+                            </div>
 	                    </div>
 	                </div>
 	                <div class="col-md-6 wow zoomIn">
@@ -217,7 +222,7 @@
             </div>
         </footer>
 
-
+        
         <!-- Js -->
         <script src="js/vendor/modernizr-2.6.2.min.js"></script>
         <script src="js/vendor/jquery-1.10.2.min.js"></script>
@@ -229,6 +234,15 @@
         <script src="js/plugins.js"></script>
         <script src="js/wow.min.js"></script>
         <script src="js/main.js"></script>
+        <script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+            ga('create', 'UA-88814053-1', 'auto');
+            ga('send', 'pageview');
+        </script>
         
     </body>
 </html>

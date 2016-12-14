@@ -47,7 +47,7 @@
     padding: 10px;
     margin-bottom: 15px;
 }
-.start-btn{
+.install-links{
     padding-top: 2em;
 }
 .start-btn a {
@@ -91,7 +91,6 @@
     margin-top: 4em;
     margin-bottom: 1em;
 }
-/*.video-link{
-    margin-left: 100px;
-
-}*/
+.google-store img{
+	max-width: 78%!important;
+}
