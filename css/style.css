@@ -97,3 +97,10 @@
 	left: -12px;
 	top: -9px;
 }
+.vk_api_post{
+padding-top: 0;
+
+}
+.vk_api_post .counter{
+	margin-top: 55px;
+}
