@@ -4,7 +4,7 @@ var downloads = window.downloadQueue || [],
     service, tracker,
     choserOpened = false,
     downloadedSize = 0;
-var userLabel = 'User-' + launchData.user_id;
+var userLabel = window.launchData && window.launchData.user_id ? ('User-' + window.launchData.user_id) : 'User';
 service = analytics.getService('vk_audio_export');
 // service.getConfig().addCallback(initAnalyticsConfig);
 // Get a Tracker using your Google Analytics app Tracking ID.
