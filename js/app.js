@@ -19,7 +19,22 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
     } else {
         if(action) {
-            if (action == "finishAudioDownload") {
+            if (action == "finishFailAudioDownload") {
+                console.info('finishFailAudioDownload', message);
+                if(message.data && message.data.audio) {
+                    if(message.data.audio.id) {
+                        var $audio = $('.audio-' + message.data.audio.id);
+                        $audio.removeClass('downloading').addClass('failed-downloading');
+                        $audio.find('.download').attr('title', 'Не удалось скачать.').tooltip('fixTitle');
+                        $audio.find('.download').off('click');
+                    }
+                    delete message.count;
+                    downloads.push($.extend(message.data.audio, {downloaded: true}));
+                }
+                if(message.downloads) {
+                    $('.downloads-count').text(message.downloads);
+                }
+            } else if (action == "finishAudioDownload") {
                 console.info('finishAudioDownload', message);
                 if(message.data && message.data.audio) {
                     if(message.data.audio.id) $('.audio-' + message.data.audio.id).removeClass('downloading').addClass('downloaded');
@@ -94,7 +109,7 @@ function sendMessage(action, callback, data) {
                 msg[property] = data[property];
             }
         }
-        if(action == 'getAudios' || action == 'getAlbumAudios') lastContentSendMessage = msg;
+        if(action == 'getAudios' || action == 'getAlbumAudios' || action == 'searchAudios') lastContentSendMessage = msg;
         chrome.runtime.sendMessage(msg, function(response){
             if(callback) callback(response);
             console.log('action', action, 'response', response);
@@ -139,6 +154,7 @@ function getAudios(params, callback, method) {
     $('#select-all').prop('checked', false);
     if(!method) method = 'getAudios';
     sendMessage(method, function(response){
+        console.log('response', response);
         if(response.num) {
             var $label = $('.tracks-num a[data-num="' + response.num + '"]');
             $label.removeClass('label-default').addClass('label-primary');
@@ -176,7 +192,7 @@ function getAudios(params, callback, method) {
                     '</div><div class="right"><div class="checkbox">' +
                     '<input type="checkbox" value="None" id="checkbox-' + id + '" name="check" />' +
                     '<label for="checkbox-' + id + '"></label></div>' +
-                    '<a href="' + e.url + '" class="download" title="' + downloadTitle + '"><i class="fa fa-download" aria-hidden="true"></i></a>' +
+                    '<a href="' + e.url + '" data-placement="left" class="download" title="' + downloadTitle + '"><i class="fa fa-download" aria-hidden="true"></i></a>' +
                     '<span class="duration" data-duration="' + e.duration + '">' + (e.duration + "").toHHMMSS() + '</span>' +
                     '</div>' +
                     '</div>');
@@ -243,7 +259,6 @@ function getAudios(params, callback, method) {
                         owner_id = $parent.data('owner-id'),
                         id = owner_id + "_" + audio_id;
                     var $audios = $('.audios .audio.playing');
-                    if($('.audios .audio.playing, .audios .audio.paused').length == 0) soundManager.stopAll();
                     $audios.not($parent).each(function(){
                         var $th = $(this),
                             audio_id = $th.data('audio-id'),
@@ -253,6 +268,7 @@ function getAudios(params, callback, method) {
                     });
                     var $player = $('.player-container');
                     var sound = soundManager.getSoundById(id);
+                    if($('.audios .audio.playing, .audios .audio.paused').length == 0 || (playingSound &&playingSound.id != id)) soundManager.stopAll();
                     if(!sound) {
                         sound = soundManager.createSound({
                             id: id,
@@ -466,10 +482,10 @@ $(document).ready(function(){
         $that.find('.loading').removeClass('hide').addClass('show');
         $that.find('.vk-logo').css('opacity', 0);
         sendMessage('authorize', function(response){
-            tracker.sendEvent('User', 'authorize', response.user_id);
             if(!response.error) {//logged in
                 $that.find('.loading').removeClass('show').addClass('hide');
                 $that.find('.vk-logo').css('opacity', 1);
+                tracker.sendEvent('User', 'authorize', response.user_id);
                 //open next window
             } else {
 
@@ -579,12 +595,35 @@ $(document).ready(function(){
             displayText: function(item){
                 return item.artist + " - " + item.title;
             },
+            afterSelect: function(item){
+                console.log('selected item', item);
+                var trackData = $.extend({}, item);
+                delete trackData.url;
+                delete trackData.genre_id;
+                trackData.id = trackData.owner_id + "_" + trackData.id;
+                delete trackData.owner_id;
+                tracker.sendEvent(userLabel, 'search.select', JSON.stringify(trackData));
+                if(item.artist) {
+                    getAudios({
+                        performer_only: 0,
+                        query: $('.search-container input').val()
+                    }, function(response){
+                        if(item.id && item.owner_id) {
+                            $('.audios .audio-' + item.owner_id + "_" + item.id).addClass('selected');
+                        }
+                    }, 'searchAudios');
+                }
+            },
             source: function(query, process) {
                 // abstracting out the "REST call and processing" in a seperate function
+                tracker.sendEvent(userLabel, 'search.query', query);
                 sendMessage('searchAudios', function(response){
                     console.log(response);
                     return process(response.items);
-                }, {query: query});
+                }, {
+                    performer_only: 0,
+                    query: query
+                });
             }
         });
     }

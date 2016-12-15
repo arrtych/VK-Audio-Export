@@ -7587,11 +7587,32 @@ a.list-group-item-danger.active:focus {
   margin: 0;
   height: 4px;
   bottom: 5px;
-  right: 82px;
+  right: 47px;
   left: 20px;
 }
 .downloads-container .downloads .download .start-pause {
   display: none;
+}
+.downloads-container .downloads .download.failed .progress {
+  display: none;
+}
+.downloads-container .downloads .download.failed .redownload {
+  float: left;
+  padding: 0 10px;
+  color: #28b62c;
+}
+.downloads-container .downloads .download.failed .start-pause {
+  display: inline;
+  top: -1px;
+  right: -2px;
+  position: relative;
+  cursor: default;
+}
+.downloads-container .downloads .download.failed .start-pause i {
+  color: #c71d1d;
+}
+.downloads-container .downloads .download.failed .start-pause i:before {
+  content: "\f071";
 }
 .downloads-container .downloads .download.downloading .progress {
   display: block;
@@ -7617,6 +7638,9 @@ a.list-group-item-danger.active:focus {
   content: "\f017";
 }
 .downloads-container .downloads .download.downloaded .progress {
+  display: none;
+}
+.downloads-container .downloads .download.downloaded .redownload {
   display: none;
 }
 .downloads-container .downloads .download.paused {
@@ -7712,6 +7736,15 @@ a.list-group-item-danger.active:focus {
 .audios-container .audios .audio.audio-loading .play-audio i:before {
   content: "\f1ce";
 }
+.audios-container .audios .audio.failed-downloading .download {
+  cursor: default;
+}
+.audios-container .audios .audio.failed-downloading .download i {
+  color: #c71d1d;
+}
+.audios-container .audios .audio.failed-downloading .download i:before {
+  content: "\f071";
+}
 .audios-container .audios .audio.failed .play-audio i {
   color: #c71d1d;
   position: relative;
@@ -7722,6 +7755,9 @@ a.list-group-item-danger.active:focus {
 }
 .audios-container .audios .audio.paused {
   background: rgba(21, 140, 186, 0.25);
+}
+.audios-container .audios .audio.selected {
+  background: rgba(40, 182, 44, 0.25);
 }
 .audios-container .audios .audio.playing {
   background: #158cba;

@@ -142,17 +142,23 @@ function downloadAdd(audio, start) {
 }
 
 function updateAudioInDownloadList(audio, data, callback) {
-    var foundIndex = indexOfDownloadList(audio);
-    if(foundIndex !== false) {
-        downloadQueue[foundIndex] = $.extend(downloadQueue[foundIndex], data);
-        chrome.storage.local.set({downloadQueue: downloadQueue}, function () {
-            if (!chrome.runtime.lastError) {
-                if(callback) callback(downloadQueue);
-            }
-            else {
-                if(callback) callback(false, chrome.runtime.lastError);
-            }
-        });
+    var foundIndexes = indexOfDownloadList(audio, true);
+    console.log('foundIndexes', foundIndexes);
+    if(foundIndexes !== false) {
+        if(foundIndexes.length > 0) {
+            $.each(foundIndexes, function(i, foundIndex){
+                downloadQueue[foundIndex] = $.extend(downloadQueue[foundIndex], data);
+            });
+            // console.log('updateAudioInDownloadList', foundIndexes, downloadQueue[foundIndex], audio);
+            chrome.storage.local.set({downloadQueue: downloadQueue}, function () {
+                if (!chrome.runtime.lastError) {
+                    if(callback) callback(downloadQueue);
+                }
+                else {
+                    if(callback) callback(false, chrome.runtime.lastError);
+                }
+            });
+        }
     } else return false;
 }
 
@@ -288,7 +294,7 @@ function launchMain(launchData, vkData, downloadQueue) {
     chrome.app.window.create('index.html', {
         id: "mainWindow",
         innerBounds: {
-            minWidth: 800,
+            minWidth: 855,
             minHeight: 720
         },
         resizable: true
@@ -329,6 +335,7 @@ chrome.app.runtime.onLaunched.addListener(function(launchData) {
     //must init all options and settings
     getSettings(function(vkData, error) {
         console.log(vkData, error);
+        window.vkData = vkData;
         if(error) {//not logged in
             launchWelcome(launchData, vkData);
         } else {
@@ -431,12 +438,27 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             }
             return true;
         } else if(action == 'searchAudios') {
-            var query = "";
+            console.log('searchAudios', message);
+            var count = message.count || 20,
+                page = message.page || 0,
+                offset = 0,
+                query = "",
+                auto_complete = 0,
+                search_own = 1,
+                performer_only = 0;
+            offset = page * count;
             if(message.query) query = message.query;
+            if(message.performer_only) performer_only = message.performer_only;
+            if(message.auto_complete) auto_complete = message.auto_complete;
+            if(message.search_own) search_own = message.search_own;
+            if(count > 100) count = 100;
             requestVK('audio.search', {
                 q: query,
-                auto_complete: 0,
-                search_own: 1
+                auto_complete: auto_complete,
+                search_own: search_own,
+                performer_only: performer_only,
+                count: count,
+                offset: offset
             }, function (answer) {
                 answer.page = page;
                 answer.num = count;
@@ -446,13 +468,13 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         } else if(action == 'openDownloadManager') {
             launchDownloadManager(function(downloads, error){
                 sendResponse(true);
-            });
+            }, vkData);
             return true;
         } else if(action == 'addAudioDownload') {
             launchDownloadManager(function(downloads, error){
                 var downloadDef = downloadAdd(message);
                 sendResponse(true);
-            });
+            }, vkData);
             return true;
         } else if(action == 'startBulkAudioDownload') {
             launchDownloadManager(function(down, error){
@@ -465,7 +487,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
                     });
                 });
-            });
+            }, vkData);
             return true;
         } else if(action == 'startAudioDownload') {
             launchDownloadManager(function(down, error){
@@ -478,7 +500,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                     console.error('downloadDef', error);
                     sendResponse({error: error});
                 });
-            });
+            }, vkData);
             return true;
         } else if(action == 'pauseAllDownloads') {
             sendResponse({
@@ -502,8 +524,30 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             downloadManager.pause(message);
             sendResponse({paused: true});
             return true;
-        } else if(action == 'finishAudioDownload') {
-            //console.info('finishAudioDownload', message);
+        } else if(action == 'startAudioRedownload') {
+            launchDownloadManager(function(down, error){
+                var downloadDef = downloadAdd(message, true);
+                downloadDef.done(function(answer){
+                    updateAudioInDownloadList(answer, {
+                        failed: false,
+                        downloaded: true
+                    });
+                    answer = $.extend(answer, {count: downloadQueue.length});
+                    sendResponse(answer);
+                });
+                downloadDef.fail(function(error){
+                    console.error('downloadDef', error);
+                    sendResponse({error: error});
+                });
+            }, vkData);
+        } else if(action == 'finishFailAudioDownload') {
+            downloadManager.removeAudio(message);
+            updateAudioInDownloadList(message, {
+                failed: true
+            });
+            // chrome.storage.local.set({downloadQueue: downloadQueue}, function () {
+            //     sendResponse({cleared: true});
+            // });
         } else if(action == 'resumeAudioDownload') {
             downloadManager.resume(message);
             sendResponse({paused: false});

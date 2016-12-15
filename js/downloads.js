@@ -1,9 +1,15 @@
 var downloads = window.downloadQueue || [],
     default_save_dir = false,// {path, fullPath}
     xhrs = {},
+    service, tracker,
     choserOpened = false,
     downloadedSize = 0;
-
+var userLabel = 'User-' + launchData.user_id;
+service = analytics.getService('vk_audio_export');
+// service.getConfig().addCallback(initAnalyticsConfig);
+// Get a Tracker using your Google Analytics app Tracking ID.
+tracker = service.getTracker('UA-88814053-1');
+tracker.sendAppView('downloadsWindow');
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     //authorizing
     var action = message.action;
@@ -23,10 +29,14 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                     }
 
                     savedAudio.fail((function($down) {
-                        return function(e){
-                            console.log('saveAudio.fail', e);
+                        return function(audioFile, error){
+                            console.log('saveAudio.fail', audioFile);
+                            sendMessage('finishFailAudioDownload', null, {data: audioFile, downloads: downloads.length});
+                            $down.removeClass('downloading waiting').addClass('failed');
+                            $down.find('.start-pause').attr('title', 'Не удалось скачать.').tooltip('fixTitle');
+                            $down.find('.start-pause').off('click');
                             sendResponse({
-                                error: e
+                                error: audioFile
                             });
                         };
                     })($download));
@@ -38,7 +48,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                                 $('.downloads-num').text(downloads.length);
                             });
                             console.log('saveAudio.done', audioFile);
-                            $down.removeClass('downloading waiting').addClass('downloaded');
+                            $down.removeClass('downloading waiting failed').addClass('downloaded');
                             sendResponse(audioFile);
                             if(audioFile.total) {
                                 downloadedSize += audioFile.total;
@@ -184,7 +194,8 @@ function saveAudio(download) {
                     var artist = download.audio &&  download.audio.artist ? download.audio.artist : 'VA Artist',
                         title = download.audio && download.audio.title ? download.audio.title : 'Unnamed';
                     fileName = artist + " - " + title;
-                    fileName.replace(/[^\w\s\d\.\-_~,;:\[\]\(\]]/g, "");
+                    fileName = fileName.replace(/[,.*;|"'?:/\\~&]/g ,'');
+                    fileName = fileName.substring(200, length);
                     chrome.fileSystem.isWritableEntry(writeEntry, function(isWritable){
                         if(isWritable) {
                             writeEntry.getFile(fileName + '.mp3', {
@@ -203,6 +214,7 @@ function saveAudio(download) {
                                     };
                                     writer.onwriteend = function (e) {
                                         console.info('file.ready', e);
+                                        tracker.sendEvent(userLabel, 'write.finish', JSON.stringify(download));
                                         downloadDef.resolve({
                                             name: fileEntry.name,
                                             data: download,
@@ -214,10 +226,15 @@ function saveAudio(download) {
                                     writer.write(blob);
                                 });
                             }, function error(error){
+                                console.error('writing file ' + fileName);
                                 // downloadDef.reject(error);
                                 console.error(error);
+                                downloadDef.reject(download, error);
                             });
-                        } else console.error('not writable');
+                        } else {
+                            console.error('not writable');
+                            downloadDef.reject(download, 'not writable');
+                        }
                     });
                 });
             });
@@ -228,7 +245,10 @@ function saveAudio(download) {
     if(default_save_dir) {
         if(download.url) {
             makeAudioRequest(download, downloadDef);
-        } else downloadDef.reject('Empty url parameter');
+        } else {
+            tracker.sendEvent(userLabel, 'download.fail.empty', JSON.stringify(download));
+            downloadDef.reject(download, 'Empty url parameter');
+        }
     } else {
         openDirectoryChoser($('#choose_dir'), function(){
             makeAudioRequest(download, downloadDef);
@@ -250,19 +270,53 @@ function prependDownload(e, waiting) {
         //     downloaded = true;
         //     classes.push('downloaded');
         // }
+        var titleText = "Приостановить загрузку",
+            redownload = "";
         if(waiting) classes.push('waiting');
+        if(e.failed) {
+            classes.push('failed');
+            titleText = "Не удалось скачать.";
+            redownload = '<a href="#" class="redownload" title="Попробовать скачать снова" data-placement="left"><i class="fa fa-repeat" aria-hidden="true"></i></a>';
+        }
+        console.log('prepend', e);
         var $download = $('<div class="' + classes.join(" ") + '" data-id="' + e.id + '">' +
             '<div class="middle"><h5><span class="artist">' + e.artist + '</span> - <span class="title" title="' + e.title + '">' + e.title + '</span></h5>' +
-            '</div><div class="right"><span class="label label-default audio-size' + (e.total ? '' : ' hide') + '">' + formatBytes(e.total) + '</span><div class="checkbox">' +
+            '</div><div class="right"><span class="label label-default audio-size' + (e.total ? '' : ' hide') + '">' + formatBytes(e.total) + '</span>' +
+            /* '<div class="checkbox">' +
             '<input type="checkbox" value="None" id="checkbox-' + id + '" name="check" />' +
-            '<label for="checkbox-' + id + '"></label></div>' +
-            '<a href="#" class="start-pause" title="Pause Download"><i class="fa fa-pause-circle" aria-hidden="true"></i></a>' +
+            '<label for="checkbox-' + id + '"></label></div>' + */
+            '<a href="#" class="start-pause" title="' + titleText + '" data-placement="left"><i class="fa fa-pause-circle" aria-hidden="true"></i></a>' + redownload +
             '</div>' +
             '<div class="progress">' +
             '<div class="progress-bar progress-bar-success" style="width: 0"></div>' +
             '</div>' +
             '</div>');
         (function (e) {
+            var $redownload = $download.find('.redownload');
+            if($redownload.length > 0) {
+                $redownload.on('click', function (event) {
+                    var trackData = $.extend({}, e);
+                    delete trackData.url;
+                    tracker.sendEvent(userLabel, 'redownload', JSON.stringify(trackData));
+                    sendMessage('startAudioRedownload', function (answer) {
+                        if(answer && answer.data && answer.data.audio) {
+                            answer.data.audio.failed = false;
+                            answer.data.audio.downloaded = true;
+                            if(answer.total) {
+                                answer.data.audio.total = answer.total;
+                            }
+                            if(answer.data.audio.id) {
+                                tracker.sendEvent(userLabel, 'redownloaded', JSON.stringify(trackData));
+                                $('.downloads .download-' + answer.data.audio.id).each(function(){
+                                    $(this).removeClass('downloading waiting failed').addClass('downloaded');
+                                });
+                            }
+                            prependDownload(answer.data.audio);
+                            console.log('redownload answer', answer);
+                        }
+                    }, e);
+                });
+            }
             $download.find('.start-pause').on('click', function (event) {
                 var $that = $(this);
                 if(!$download.hasClass('paused')) {

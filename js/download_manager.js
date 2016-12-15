@@ -1,5 +1,10 @@
 (function() {
     var DownloadManager;
+    Array.prototype.remove = function(from, to) {
+        var rest = this.slice((to || from) + 1 || this.length);
+        this.length = from < 0 ? this.length + from : from;
+        return this.push.apply(this, rest);
+    };
 
     DownloadManager = (function() {
         function DownloadManager() {
@@ -79,44 +84,78 @@
         DownloadManager.prototype.runNextTask = function() {
             var messageSending, task;
             task = this.queue.shift();
-            this.enRoute.push(task);
-            this.curTaskNum++;
-            task.numRetries++;
             // var messageDef = task.promise;
             //must send message to download manager window
-            messageSending = this.sendMessage('runNextTask', task);
-            messageSending.done((function(_this) {
-                return function(downloadInfo, promise) {
-                    var i;
-                    i = _this.enRoute.indexOf(task);
-                    _this.enRoute.splice(i, 1);
-                    // task.promise.resolve(imgBlobUrl);
-                    _this.curTaskNum--;
-                    promise.resolve(downloadInfo);
-                    // console.log('messageSending.done', messageDef, downloadInfo);
-                    return _this.runTasks();
-                };
-            })(this));
-            messageSending.fail((function(_this) {
-                return function(error, promise) {
-                    // promise.reject(task);
-                    if (task.numRetries < 3) {
-                        return _this.addTask(task, promise);
-                    }
-                };
-            })(this));
+            console.log('task', task);
+            var that = this;
+            var recurClean = function(task){
+                if(task === undefined && that.queue.length > 0) {
+                    recurClean(that.queue.shift());
+                } else return task;
+            };
+            if(task) {
+                task = recurClean(task);
+                console.log('nexttask', task);
+                this.enRoute.push(task);
+                this.curTaskNum++;
+                task.numRetries++;
+                messageSending = this.sendMessage('runNextTask', task);
+                messageSending.done((function (_this) {
+                    return function (downloadInfo, promise) {
+                        var i;
+                        i = _this.enRoute.indexOf(task);
+                        _this.enRoute.splice(i, 1);
+                        // task.promise.resolve(imgBlobUrl);
+                        _this.curTaskNum--;
+                        promise.resolve(downloadInfo);
+                        // console.log('messageSending.done', messageDef, downloadInfo);
+                        return _this.runTasks();
+                    };
+                })(this));
+                messageSending.fail((function (_this) {
+                    return function (error, promise) {
+                        // promise.reject(task);
+                        // if (task.numRetries < 3) {
+                        //     return _this.addTask(task, promise);
+                        // }
+                    };
+                })(this));
+            }
             return messageSending;
         };
 
-        DownloadManager.prototype.getAudio = function(audio) {
+        DownloadManager.prototype.indexOf = function(audio) {
             var id = false;
+            if(audio.data && audio.data.audio && audio.data.audio.id) id = audio.data.audio.id;
             if(audio.audio && audio.audio.id) id = audio.audio.id;
             if(audio.id) id = audio.id;
-            var foundAudio = $.grep(this.enRoute, function(e){
-                return e.id == id || (e.audio && id == e.audio.id);
+            var indexes = [];
+            var _that = this;
+            var foundAudio = $.grep(_that.enRoute, function(e, index){
+                console.log('indexOf', e, index, id, audio);
+                if((e && e.id == id) || (e && e.audio && id == e.audio.id)) {
+                    indexes.push(index);
+                    return true;
+                } else return false;
             });
-            if(foundAudio.length > 0) {
-                return foundAudio;
+            if(indexes.length > 0) {
+                return indexes[0];
+            } else return false;
+        };
+        DownloadManager.prototype.removeAudio = function(audio) {
+            var index = this.indexOf(audio);
+            console.log('remove audio', index, audio);
+            if(index !== false) {
+                this.enRoute.splice(index, 1);
+                // task.promise.resolve(imgBlobUrl);
+                this.curTaskNum--;
+                this.runTasks();
+            }
+        };
+        DownloadManager.prototype.getAudio = function(audio) {
+            var index = this.indexOf(audio);
+            if(index !== false) {
+                return this.enRoute[index];
             } else return false;
         };
         DownloadManager.prototype.pause = function(audio) {
