@@ -371,6 +371,7 @@ function getAudios(params, callback, method) {
             if(pages !== $pag_wrapper.find('.owl-stage > div').length){
                 $pag_wrapper.find('.pagination').remove();
                 $pag_wrapper.append('<div class="pagination"></div>');
+                if(pages > 300) pages = 300;
                 for(var i = 0; i < pages; i++) {
                     // console.log(i, response.page, i == response.page);
                     $pag_wrapper.find('.pagination').append('<a href="' + paginationPrefix + (i + 1) + '"' + (i == response.page ? ' class="current-page"' : '') + ' data-hash="' + paginationPrefix + (i + 1) + '">' + (i + 1) + '</a>');
@@ -584,6 +585,16 @@ $(document).ready(function(){
             }
         });
         getAudios();
+        $('.btn-search').on('click', function(){
+            var query = $('.search-container input').val();
+            tracker.sendEvent(userLabel, 'search.submit', JSON.stringify(query));
+            getAudios({
+                performer_only: 0,
+                query: query
+            }, function(response){
+
+            }, 'searchAudios');
+        });
         $('.get-audios').on('click', function(){
             getAudios();
             $('.albums .album.active').removeClass('active');
@@ -619,7 +630,7 @@ $(document).ready(function(){
                 tracker.sendEvent(userLabel, 'search.query', query);
                 sendMessage('searchAudios', function(response){
                     console.log(response);
-                    return process(response.items);
+                    return process((response && response.items) || {});
                 }, {
                     performer_only: 0,
                     query: query
